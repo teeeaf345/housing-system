@@ -1,59 +1,1498 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة الإسكان - ديمو متكامل</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+/* ===========================================
+   تنسيق عام ودعم العرض أحادي الصفحة (SPA)
+=========================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Cairo', sans-serif;
+}
 
-    <title>نظام إدارة الإسكان</title>
+body {
+    background: #f4f7f6;
+    color: #333;
+    min-height: 100vh;
+}
 
-    <link rel="stylesheet" href="style.css">
+/* إخفاء وإظهار الشاشات */
+.view-section {
+    display: none;
+    width: 100%;
+}
+
+.view-section.active-view {
+    display: block;
+}
+
+/* صفحة تسجيل الدخول */
+#loginView.active-view {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: #ffffff;
+}
+
+.login-box {
+    width: 430px;
+    background: white;
+    padding: 40px;
+    border-radius: 18px;
+    text-align: center;
+    box-shadow: 0 10px 35px rgba(0,0,0,.12);
+}
+
+.logo {
+    width: 90px;
+    margin-bottom: 20px;
+}
+
+.login-box h1 {
+    color: #143642;
+    margin-bottom: 10px;
+    font-size: 32px;
+}
+
+.login-box p {
+    color: #777;
+    margin-bottom: 30px;
+}
+
+.login-box label {
+    display: block;
+    text-align: right;
+    margin-top: 15px;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #444;
+}
+
+.login-box input {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #d8d8d8;
+    border-radius: 10px;
+    font-size: 15px;
+    margin-bottom: 10px;
+}
+
+.login-box input:focus {
+    outline: none;
+    border: 1px solid #128C7E;
+}
+
+.login-box button {
+    width: 100%;
+    padding: 15px;
+    margin-top: 20px;
+    border: none;
+    border-radius: 10px;
+    background: #128C7E;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: .3s;
+}
+
+.login-box button:hover {
+    background: #0D6E63;
+}
+
+/* ===========================================
+   تنسيق لوحة التحكم والتنقل (Layout)
+=========================================== */
+.dashboard-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* القائمة الجانبية Sidebar */
+.sidebar {
+    width: 280px;
+    background: #ffffff;
+    border-left: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 25px 20px;
+    height: 100vh;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 100;
+}
+
+.sidebar-header {
+    text-align: center;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 20px;
+}
+
+.sidebar-header h2 {
+    font-size: 20px;
+    color: #143642;
+}
+
+.sidebar-header p {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 0;
+}
+
+.sidebar-menu {
+    margin-top: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-grow: 1;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: #555;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 10px;
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.menu-item:hover, .menu-item.active {
+    background: #e8f5f3;
+    color: #128C7E;
+}
+
+.sidebar-footer {
+    border-top: 1px solid #f0f0f0;
+    padding-top: 15px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.avatar {
+    width: 38px;
+    height: 38px;
+    background: #e2e8f0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-info small {
+    display: block;
+    color: #888;
+    font-size: 12px;
+}
+
+.logout-btn {
+    display: block;
+    text-align: center;
+    color: #dc3545;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 5px;
+}
+
+/* المنطقة الرئيسية Main Content */
+.main-content {
+    margin-right: 280px;
+    flex-grow: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+.top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.top-header h1 {
+    font-size: 28px;
+    color: #143642;
+    margin-bottom: 5px;
+}
+
+.welcome-badge {
+    background: #d1e7dd;
+    color: #0f5132;
+    padding: 10px 18px;
+    border-radius: 30px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* شريط تنبيه 6 أشهر */
+.alert-banner.warning {
+    background-color: #fff3cd;
+    border-right: 5px solid #ffc107;
+    padding: 15px 20px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 25px;
+    color: #664d03;
+}
+
+/* كروت الإحصائيات الرئيسية */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: #ffffff;
+    padding: 18px;
+    border-radius: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    border-top: 4px solid #ccc;
+}
+
+.stat-num {
+    display: block;
+    font-size: 26px;
+    font-weight: bold;
+    color: #143642;
+}
+
+.stat-label {
+    font-size: 13px;
+    color: #666;
+    font-weight: bold;
+}
+
+.stat-icon {
+    font-size: 22px;
+    padding: 8px;
+    border-radius: 10px;
+}
+
+.border-blue { border-top-color: #0d6efd; }
+.border-yellow { border-top-color: #ffc107; }
+.border-green { border-top-color: #2ee858; }
+.border-dark { border-top-color: #212529; }
+.border-red { border-top-color: #dc3545; }
+.border-gray { border-top-color: #6c757d; }
+
+.icon-blue { background: #e7f1ff; }
+.icon-yellow { background: #fff9e6; }
+.icon-green { background: #e6f9ed; }
+.icon-dark { background: #e9ecef; }
+.icon-red { background: #ffebee; }
+.icon-gray { background: #f8f9fa; }
+
+/* التفاصيل السفلى */
+.dashboard-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.detail-card {
+    background: #ffffff;
+    padding: 22px;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+}
+
+.detail-card h3 {
+    font-size: 17px;
+    color: #143642;
+    margin-bottom: 18px;
+}
+
+.quick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.action-btn {
+    padding: 12px;
+    text-align: center;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 14px;
+    transition: 0.3s;
+    cursor: pointer;
+    display: block;
+}
+
+.btn-green { background: #128C7E; color: white; }
+.btn-green:hover { background: #0D6E63; }
+
+.btn-yellow { background: #ffc107; color: #000; }
+.btn-yellow:hover { background: #e0a800; }
+
+.btn-outline { border: 1px solid #ccc; color: #444; }
+.btn-outline:hover { background: #f8f9fa; }
+
+.list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+    color: #444;
+}
+
+.list-item:last-child {
+    border-bottom: none;
+}
+
+.badge {
+    background: #f0f4f8;
+    color: #143642;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+/* ===========================================
+   تنسيق الطلبات والجدول والفلاتر
+=========================================== */
+.requests-add-btn {
+    display: inline-block;
+    background: #128C7E;
+    color: white;
+    text-decoration: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: bold;
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.requests-add-btn:hover {
+    background: #0D6E63;
+}
+
+.requests-filters {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.filter-group label {
+    font-size: 13px;
+    font-weight: bold;
+    color: #444;
+}
+
+.filter-group input,
+.filter-group select {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid #d8d8d8;
+    border-radius: 9px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 13px;
+    background: white;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    outline: none;
+    border-color: #128C7E;
+    box-shadow: 0 0 0 2px rgba(18,140,126,0.08);
+}
+
+.reset-filter-btn {
+    align-self: end;
+    padding: 11px 15px;
+    border: 1px solid #ddd;
+    background: #f8f9fa;
+    color: #555;
+    border-radius: 9px;
+    cursor: pointer;
+    font-family: 'Cairo', sans-serif;
+    font-weight: bold;
+}
+
+.reset-filter-btn:hover {
+    background: #eeeeee;
+}
+
+.requests-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    color: #444;
+}
+
+.requests-info span {
+    color: #777;
+    font-size: 13px;
+}
+
+.requests-table-card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+    overflow: hidden;
+}
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.requests-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1000px;
+}
+
+.requests-table thead {
+    background: #f4f7f6;
+}
+
+.requests-table th {
+    padding: 15px 12px;
+    text-align: right;
+    font-size: 13px;
+    color: #444;
+    white-space: nowrap;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.requests-table td {
+    padding: 14px 12px;
+    text-align: right;
+    font-size: 13px;
+    color: #555;
+    border-bottom: 1px solid #f0f0f0;
+    white-space: nowrap;
+}
+
+.requests-table tbody tr {
+    transition: 0.2s;
+}
+
+.requests-table tbody tr:hover {
+    background: #f8fbfa;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 5px 11px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.status-new { background: #e7f1ff; color: #0d6efd; }
+.status-notified { background: #fff4d6; color: #8a6500; }
+.status-housed { background: #e6f9ed; color: #198754; }
+.status-evacuated { background: #e9ecef; color: #343a40; }
+.status-not-reviewed { background: #ffebee; color: #dc3545; }
+.status-refused { background: #f1f1f1; color: #6c757d; }
+
+.view-btn {
+    width: 35px;
+    height: 35px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: #e8f5f3;
+    color: #128C7E;
+    text-decoration: none;
+    transition: 0.3s;
+    cursor: pointer;
+    border: none;
+}
+
+.view-btn:hover {
+    background: #128C7E;
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* ===========================================
+   صفحة تفاصيل الطلب والخط الزمني
+=========================================== */
+.back-btn {
+    display: inline-block;
+    padding: 11px 18px;
+    background: #ffffff;
+    color: #128C7E;
+    border: 1px solid #128C7E;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: bold;
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.back-btn:hover {
+    background: #128C7E;
+    color: white;
+}
+
+.request-details-card {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+}
+
+.details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eeeeee;
+}
+
+.details-header h2 {
+    margin: 0 0 7px;
+    font-size: 19px;
+    color: #333;
+}
+
+.details-header p {
+    margin: 0;
+    font-size: 13px;
+    color: #777;
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+.detail-item {
+    background: #f8faf9;
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.detail-label {
+    font-size: 12px;
+    color: #777;
+}
+
+.detail-item strong {
+    color: #333;
+    font-size: 14px;
+}
+
+.notes-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eeeeee;
+}
+
+.notes-section p {
+    background: #f8faf9;
+    padding: 15px;
+    border-radius: 10px;
+    color: #555;
+    font-size: 13px;
+    margin-bottom: 0;
+}
+
+.timeline-card {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+}
+
+.section-title {
+    margin-bottom: 25px;
+}
+
+.section-title h2 {
+    margin: 0 0 7px;
+    font-size: 19px;
+    color: #333;
+}
+
+.section-title p {
+    margin: 0;
+    font-size: 13px;
+    color: #777;
+}
+
+.timeline {
+    position: relative;
+    padding-right: 20px;
+}
+
+.timeline::before {
+    content: "";
+    position: absolute;
+    right: 14px;
+    top: 10px;
+    bottom: 10px;
+    width: 2px;
+    background: #dfe9e7;
+}
+
+.timeline-item {
+    position: relative;
+    display: flex;
+    gap: 18px;
+    padding-bottom: 30px;
+}
+
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+
+.timeline-icon {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    border-radius: 50%;
+    background: #e8eeee;
+    color: #777;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    position: relative;
+    z-index: 2;
+}
+
+.timeline-item.completed .timeline-icon {
+    background: #128C7E;
+    color: white;
+}
+
+.timeline-content {
+    padding-top: 2px;
+}
+
+.timeline-content h3 {
+    margin: 0 0 5px;
+    font-size: 15px;
+    color: #333;
+}
+
+.timeline-content span {
+    display: block;
+    font-size: 12px;
+    color: #128C7E;
+    margin-bottom: 7px;
+}
+
+.timeline-content p {
+    margin: 0;
+    color: #777;
+    font-size: 13px;
+}
+
+/* الاستجابة للهواتف والشاشات الصغيرة */
+@media (max-width: 1000px) {
+    .requests-filters { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 900px) {
+    .details-grid { grid-template-columns: repeat(2, 1fr); }
+    .sidebar { width: 230px; }
+    .main-content { margin-right: 230px; }
+}
+
+@media (max-width: 768px) {
+    .dashboard-layout { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; position: relative; }
+    .main-content { margin-right: 0; padding: 15px; }
+    .requests-filters { grid-template-columns: 1fr; }
+    .details-grid { grid-template-columns: 1fr; }
+}
+    </style>
 </head>
-
 <body>
 
-    <div class="login-box">
-
-        <img src="images/logo.png" class="logo">
-
-        <h1>نظام إدارة الإسكان</h1>
-
-        <p>
-            إدارة تشغيل وصيانة المنشآت العسكرية بالطائف
-        </p>
-
-        <form action="admin-dashboard.html" method="GET">
-
-            <label for="username">اسم المستخدم</label>
-
-            <input
-                type="text"
-                id="username"
-                name="username"
-                placeholder="أدخل اسم المستخدم"
-                required
-            >
-
-            <label for="password">كلمة المرور</label>
-
-            <input
-                type="password"
-                id="password"
-                name="password"
-                placeholder="أدخل كلمة المرور"
-                required
-            >
-
-            <button type="submit">
-                تسجيل الدخول
-            </button>
-
-        </form>
-
+    <!-- 1. شاشة تسجيل الدخول -->
+    <div id="loginView" class="view-section active-view">
+        <div class="login-box">
+            <div style="font-size: 45px; margin-bottom: 10px;">🛡️</div>
+            <h1>نظام إدارة الإسكان</h1>
+            <p>إدارة تشغيل وصيانة المنشآت العسكرية بالطائف</p>
+            <form onsubmit="handleLogin(event)">
+                <label>اسم المستخدم</label>
+                <input type="text" id="loginUser" placeholder="أدخل اسم المستخدم" required value="admin">
+                
+                <label>كلمة المرور</label>
+                <input type="password" id="loginPass" placeholder="أدخل كلمة المرور" required value="123456">
+                
+                <button type="submit">تسجيل الدخول</button>
+            </form>
+        </div>
     </div>
 
-    <script src="script.js"></script>
+    <!-- الإطار العام للوحة التحكم والصفحات الداخلية -->
+    <div id="appContainer" style="display: none;" class="dashboard-layout">
+        
+        <!-- القائمة الجانبية -->
+        <aside class="sidebar">
+            <div>
+                <div class="sidebar-header">
+                    <div style="font-size: 35px;">🛡️</div>
+                    <h2>إدارة الإسكان</h2>
+                    <p>إدارة تشغيل وصيانة المنشآت العسكرية بالطائف</p>
+                </div>
+                
+                <nav class="sidebar-menu">
+                    <a onclick="switchPage('dashboard')" id="nav-dashboard" class="menu-item active">
+                        <span>📊</span> لوحة التحكم
+                    </a>
+                    <a onclick="switchPage('requests')" id="nav-requests" class="menu-item">
+                        <span>📋</span> الطلبات
+                    </a>
+                    <a onclick="switchPage('add-request')" id="nav-add-request" class="menu-item">
+                        <span>➕</span> طلب جديد
+                    </a>
+                    <a onclick="switchPage('reports')" id="nav-reports" class="menu-item">
+                        <span>📈</span> التقارير
+                    </a>
+                    <a onclick="switchPage('archive')" id="nav-archive" class="menu-item">
+                        <span>📁</span> الأرشيف
+                    </a>
+                </nav>
+            </div>
 
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="avatar">👤</div>
+                    <div>
+                        <strong>مستخدم النظام</strong>
+                        <small>مدير النظام</small>
+                    </div>
+                </div>
+                <a onclick="handleLogout()" class="logout-btn">🚪 تسجيل الخروج</a>
+            </div>
+        </aside>
+
+        <!-- المحتوى الرئيسي المتغير -->
+        <main class="main-content">
+            
+            <!-- 2. شاشة لوحة التحكم -->
+            <div id="dashboardView" class="view-section active-view">
+                <header class="top-header">
+                    <div>
+                        <h1>لوحة التحكم</h1>
+                        <p>نظرة عامة على النظام والإحصائيات الحالية</p>
+                    </div>
+                    <div class="welcome-badge">✅ مرحباً بك في النظام</div>
+                </header>
+
+                <div class="alert-banner warning" id="warningBanner">
+                    <span class="alert-icon">⚠️</span>
+                    <div class="alert-text">
+                        <strong>تنبيه هام:</strong> يوجد <span id="warningCount">1</span> طلب متبقي لها أقل من 15 يوم قبل انتهاء مهلة الـ 6 أشهر.
+                    </div>
+                </div>
+
+                <section class="detail-card" style="margin-bottom:20px;">
+                    <h3>📊 إجمالي الطلبات</h3>
+                    <div class="list-item">
+                        <span>جميع الطلبات</span>
+                        <strong class="badge" id="stat-total">6</strong>
+                    </div>
+                </section>
+
+                <section class="stats-grid">
+                    <div class="stat-card border-blue">
+                        <div class="stat-info">
+                            <span class="stat-num" id="stat-new">1</span>
+                            <span class="stat-label">جديد</span>
+                        </div>
+                        <div class="stat-icon icon-blue">📄</div>
+                    </div>
+                    <div class="stat-card border-yellow">
+                        <div class="stat-info">
+                            <span class="stat-num" id="stat-notified">1</span>
+                            <span class="stat-label">تم الإشعار</span>
+                        </div>
+                        <div class="stat-icon icon-yellow">🔔</div>
+                    </div>
+                    <div class="stat-card border-green">
+                        <div class="stat-info">
+                            <span class="stat-num" id="stat-housed">2</span>
+                            <span class="stat-label">تم التسكين</span>
+                        </div>
+                        <div class="stat-icon icon-green">🏠</div>
+                    </div>
+                    <div class="stat-card border-dark">
+                        <div class="stat-info">
+                            <span class="stat-num" id="stat-evacuated">1</span>
+                            <span class="stat-label">تم الإخلاء</span>
+                        </div>
+                        <div class="stat-icon icon-dark">🚪</div>
+                    </div>
+                    <div class="stat-card border-red">
+                        <div class="stat-info">
+                            <span class="stat-num" id="stat-not-reviewed">1</span>
+                            <span class="stat-label">لم يراجع</span>
+                        </div>
+                        <div class="stat-icon icon-red">⏳</div>
+                    </div>
+                    <div class="stat-card border-gray">
+                        <div class="stat-info">
+                            <span class="stat-num" id="stat-refused">0</span>
+                            <span class="stat-label">رفض السكن</span>
+                        </div>
+                        <div class="stat-icon icon-gray">🚫</div>
+                    </div>
+                </section>
+
+                <section class="dashboard-details">
+                    <div class="detail-card">
+                        <h3>⚡ إجراءات سريعة</h3>
+                        <div class="quick-actions">
+                            <a onclick="switchPage('add-request')" class="action-btn btn-green">+ إضافة طلب جديد</a>
+                            <a onclick="switchPage('reports')" class="action-btn btn-yellow">📥 التقارير</a>
+                            <a onclick="switchPage('requests')" class="action-btn btn-outline">📋 عرض الطلبات</a>
+                        </div>
+                    </div>
+
+                    <div class="detail-card">
+                        <h3>📍 توزيع المواقع</h3>
+                        <div id="locationList"></div>
+                    </div>
+
+                    <div class="detail-card">
+                        <h3>🎖️ توزيع الفئات</h3>
+                        <div id="categoryList"></div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- 3. شاشة جدول الطلبات -->
+            <div id="requestsView" class="view-section">
+                <header class="top-header">
+                    <div>
+                        <h1>إدارة الطلبات</h1>
+                        <p>استعراض وتصفية كافة طلبات الإسكان المسجلة</p>
+                    </div>
+                    <a onclick="switchPage('add-request')" class="requests-add-btn">➕ إضافة طلب جديد</a>
+                </header>
+
+                <div class="requests-filters">
+                    <div class="filter-group">
+                        <label>بحث بالاسم أو الرقم الوظيفي</label>
+                        <input type="text" id="filterSearch" placeholder="أدخل للبحث..." oninput="renderRequestsTable()">
+                    </div>
+                    <div class="filter-group">
+                        <label>حالة الطلب</label>
+                        <select id="filterStatus" onchange="renderRequestsTable()">
+                            <option value="">الكل</option>
+                            <option value="جديد">جديد</option>
+                            <option value="تم الإشعار">تم الإشعار</option>
+                            <option value="تم التسكين">تم التسكين</option>
+                            <option value="تم الإخلاء">تم الإخلاء</option>
+                            <option value="لم يراجع">لم يراجع</option>
+                            <option value="رفض السكن">رفض السكن</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>الموقع</label>
+                        <select id="filterLocation" onchange="renderRequestsTable()">
+                            <option value="">الكل</option>
+                            <option value="الطائف">الطائف</option>
+                            <option value="الجبالات">الجبالات</option>
+                        </select>
+                    </div>
+                    <button class="reset-filter-btn" onclick="resetFilters()">إعادة ضبط</button>
+                </div>
+
+                <div class="requests-info">
+                    <div>النتائج المعروضة: <strong id="resultsCount">0</strong></div>
+                </div>
+
+                <div class="requests-table-card">
+                    <div class="table-wrapper">
+                        <table class="requests-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الاسم</th>
+                                    <th>الرقم الوظيفي</th>
+                                    <th>الفئة</th>
+                                    <th>الرتبة</th>
+                                    <th>الوحدة</th>
+                                    <th>الموقع</th>
+                                    <th>الحالة</th>
+                                    <th>التاريخ</th>
+                                    <th>إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="requestsTableBody">
+                                <!-- سيتم التعبئة ديناميكياً -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. شاشة إضافة طلب جديد -->
+            <div id="addRequestView" class="view-section">
+                <header class="top-header">
+                    <div>
+                        <h1>إضافة طلب جديد</h1>
+                        <p>تعبئة بيانات المستفيد لتقديم طلب إسكان جديد</p>
+                    </div>
+                    <a onclick="switchPage('requests')" class="back-btn">← العودة للطلبات</a>
+                </header>
+
+                <section class="request-details-card">
+                    <form id="addRequestForm" onsubmit="handleAddRequestSubmit(event)">
+                        <div class="details-grid">
+                            <div class="filter-group">
+                                <label for="fullName">الاسم الكامل <span style="color:red">*</span></label>
+                                <input type="text" id="fullName" placeholder="أدخل اسم المستفيد الثلاثي أو الرباعي" required>
+                            </div>
+
+                            <div class="filter-group">
+                                <label for="empNumber">الرقم الوظيفي <span style="color:red">*</span></label>
+                                <input type="text" id="empNumber" placeholder="مثال: 1007" required>
+                                <small id="empNumError" style="color:red; display:none;">الرقم الوظيفي مسجل مسبقاً!</small>
+                            </div>
+
+                            <div class="filter-group">
+                                <label for="categorySelect">الفئة <span style="color:red">*</span></label>
+                                <select id="categorySelect" required onchange="onCategoryChange()">
+                                    <option value="">اختر الفئة...</option>
+                                    <option value="ضباط 1">ضباط 1 (كبار الضباط)</option>
+                                    <option value="ضباط 2">ضباط 2</option>
+                                    <option value="أفراد">أفراد</option>
+                                </select>
+                            </div>
+
+                            <div class="filter-group">
+                                <label for="rankSelect">الرتبة <span style="color:red">*</span></label>
+                                <select id="rankSelect" required disabled>
+                                    <option value="">اختر الفئة أولاً...</option>
+                                </select>
+                            </div>
+
+                            <div class="filter-group">
+                                <label for="unitInput">الوحدة / الإدارة <span style="color:red">*</span></label>
+                                <input type="text" id="unitInput" placeholder="مثال: وحدة الصيانة" required>
+                            </div>
+
+                            <div class="filter-group">
+                                <label for="locationSelect">الموقع المتاح <span style="color:red">*</span></label>
+                                <select id="locationSelect" required disabled>
+                                    <option value="">اختر الفئة أولاً...</option>
+                                </select>
+                            </div>
+
+                            <div class="filter-group">
+                                <label>حالة الطلب الأولية</label>
+                                <input type="text" value="جديد" readonly style="background:#e7f1ff; color:#0d6efd; font-weight:bold;">
+                            </div>
+                        </div>
+
+                        <div class="notes-section">
+                            <label for="notesInput" style="font-weight:bold; margin-bottom:8px; display:block;">ملاحظات إضافية</label>
+                            <textarea id="notesInput" rows="3" style="width:100%; border:1px solid #d8d8d8; border-radius:10px; padding:10px; font-family:Cairo;" placeholder="أي ملاحظات إضافية تخص الطلب..."></textarea>
+                        </div>
+
+                        <div style="margin-top: 20px; text-align: left;">
+                            <button type="submit" class="requests-add-btn" style="border:none; cursor:pointer;">💾 حفظ الطلب</button>
+                        </div>
+                    </form>
+                </section>
+            </div>
+
+            <!-- 5. شاشة تفاصيل الطلب والخط الزمني -->
+            <div id="requestDetailsView" class="view-section">
+                <header class="top-header">
+                    <div>
+                        <h1>تفاصيل الطلب</h1>
+                        <p>استعراض كافة بيانات الطلب والخط الزمني للحالة</p>
+                    </div>
+                    <a onclick="switchPage('requests')" class="back-btn">← العودة للطلبات</a>
+                </header>
+
+                <section class="request-details-card">
+                    <div class="details-header">
+                        <div>
+                            <h2 id="detail-name">محمد عبدالله العتيبي</h2>
+                            <p>رقم الطلب: <strong id="detail-id">#101</strong></p>
+                        </div>
+                        <span id="detail-status-badge" class="status-badge status-housed">تم التسكين</span>
+                    </div>
+
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">الرقم الوظيفي</span>
+                            <strong id="detail-emp">1001</strong>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">الفئة</span>
+                            <strong id="detail-cat">ضباط 1</strong>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">الرتبة</span>
+                            <strong id="detail-rank">عقيد</strong>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">الوحدة / الإدارة</span>
+                            <strong id="detail-unit">سلاح الصيانة</strong>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">الموقع</span>
+                            <strong id="detail-loc">الطائف</strong>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">تاريخ التقديم</span>
+                            <strong id="detail-date">2026-01-15</strong>
+                        </div>
+                    </div>
+
+                    <div class="notes-section">
+                        <label style="font-weight:bold; margin-bottom:8px; display:block;">الملاحظات المسجلة</label>
+                        <p id="detail-notes">تم تقديم الأوراق الثبوتية كاملة وتم اعتماد السكن حسب الأولوية.</p>
+                    </div>
+                </section>
+
+                <section class="timeline-card">
+                    <div class="section-title">
+                        <h2>الخط الزمني للطلب</h2>
+                        <p>تتبع مراحل وإجراءات سير الطلب</p>
+                    </div>
+
+                    <div class="timeline" id="timelineContainer">
+                        <div class="timeline-item completed">
+                            <div class="timeline-icon">✓</div>
+                            <div class="timeline-content">
+                                <h3>تقديم الطلب</h3>
+                                <span>2026-01-15</span>
+                                <p>تم تسجيل الطلب في النظام وتوثيق البيانات الأولية.</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item completed">
+                            <div class="timeline-icon">✓</div>
+                            <div class="timeline-content">
+                                <h3>الإشعار بالجاهزية</h3>
+                                <span>2026-02-01</span>
+                                <p>تم إشعار المستفيد بتوفر وحدة سكنية مناسبة.</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item completed">
+                            <div class="timeline-icon">✓</div>
+                            <div class="timeline-content">
+                                <h3>تم التسكين النهائي</h3>
+                                <span>2026-02-10</span>
+                                <p>تم تسليم المفاتيح واستكمال إجراءات التسكين.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- 6. شاشة التقارير والأرشيف -->
+            <div id="reportsView" class="view-section">
+                <header class="top-header">
+                    <div>
+                        <h1>التقارير والإحصائيات</h1>
+                        <p>استخراج التقارير الشاملة لنظام الإسكان</p>
+                    </div>
+                </header>
+                <div class="detail-card" style="text-align: center; padding: 50px;">
+                    <div style="font-size: 50px;">📈</div>
+                    <h2>قسم التقارير جاهز لاستعراض البيانات</h2>
+                    <p style="color: #777; margin-top: 10px;">يمكنك تصدير تقارير الطلبات حسب الفترة أو الفئة أو الموقع.</p>
+                </div>
+            </div>
+
+            <div id="archiveView" class="view-section">
+                <header class="top-header">
+                    <div>
+                        <h1>أرشيف الطلبات</h1>
+                        <p>الطلبات المؤرشفة والمغلقة</p>
+                    </div>
+                </header>
+                <div class="detail-card" style="text-align: center; padding: 50px;">
+                    <div style="font-size: 50px;">📁</div>
+                    <h2>سجل الأرشيف</h2>
+                    <p style="color: #777; margin-top: 10px;">يحتوي على كافة الطلبات التي تم إخلاؤها أو إنهاء إجراءاتها.</p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ===========================================
+       سكربت المحاكاة وتفاعل الواجهات
+    =========================================== -->
+    <script>
+        // محاكاة قاعدة البيانات في الذاكرة
+        let requestsData = [
+            { id: 101, full_name: "محمد عبدالله العتيبي", employee_number: "1001", category: "ضباط 1", rank: "عقيد", unit: "سلاح الصيانة", location: "الطائف", status: "تم التسكين", request_date: "2026-01-15", notes: "تم استكمال إجراءات تسليم السكن بالكامل." },
+            { id: 102, full_name: "خالد بن فهد الشهري", employee_number: "1002", category: "أفراد", rank: "رقيب أول", unit: "كتيبة الإشارة", location: "الجبالات", status: "جديد", request_date: "2026-02-10", notes: "طلب جديد قيد التدقيق." },
+            { id: 103, full_name: "سعد سلطان القحطاني", employee_number: "1003", category: "ضباط 2", rank: "مقدم", unit: "إدارة الهندسة", location: "الطائف", status: "تم الإشعار", request_date: "2026-02-05", notes: "تم التبليغ بضرورة المراجعة خلال أسبوعين." },
+            { id: 104, full_name: "فهد عبدالرحمن الدوسري", employee_number: "1004", category: "أفراد", rank: "رئيس رقباء", unit: "وحدة النقل", location: "الطائف", status: "تم التسكين", request_date: "2025-11-20", notes: "مستقر في السكن حالياً." },
+            { id: 105, full_name: "سعود بن طلال الشمري", employee_number: "1005", category: "ضباط 2", rank: "نقيب", unit: "الخدمات الطبية", location: "الجبالات", status: "لم يراجع", request_date: "2025-08-25", notes: "تنتهي مهلة الـ 6 أشهر قريباً ولم يراجع الإدارة." },
+            { id: 106, full_name: "عبدالعزيز علي الغامدي", employee_number: "1006", category: "أفراد", rank: "عريف", unit: "الشرطة العسكرية", location: "الطائف", status: "تم الإخلاء", request_date: "2025-01-10", notes: "تم إخلاء الوحدة السكنية بنجاح." }
+        ];
+
+        // تسجيل الدخول
+        function handleLogin(e) {
+            e.preventDefault();
+            document.getElementById('loginView').classList.remove('active-view');
+            document.getElementById('appContainer').style.display = 'flex';
+            switchPage('dashboard');
+        }
+
+        // تسجيل الخروج
+        function handleLogout() {
+            document.getElementById('appContainer').style.display = 'none';
+            document.getElementById('loginView').classList.add('active-view');
+        }
+
+        // التنقل بين الصفحات
+        function switchPage(pageId) {
+            document.querySelectorAll('.main-content .view-section').forEach(view => {
+                view.classList.remove('active-view');
+            });
+
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            if(pageId === 'dashboard') {
+                document.getElementById('dashboardView').classList.add('active-view');
+                document.getElementById('nav-dashboard').classList.add('active');
+                updateDashboardData();
+            } else if(pageId === 'requests') {
+                document.getElementById('requestsView').classList.add('active-view');
+                document.getElementById('nav-requests').classList.add('active');
+                renderRequestsTable();
+            } else if(pageId === 'add-request') {
+                document.getElementById('addRequestView').classList.add('active-view');
+                document.getElementById('nav-add-request').classList.add('active');
+            } else if(pageId === 'reports') {
+                document.getElementById('reportsView').classList.add('active-view');
+                document.getElementById('nav-reports').classList.add('active');
+            } else if(pageId === 'archive') {
+                document.getElementById('archiveView').classList.add('active-view');
+                document.getElementById('nav-archive').classList.add('active');
+            } else if(pageId === 'request-details') {
+                document.getElementById('requestDetailsView').classList.add('active-view');
+            }
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // تحديث إحصائيات لوحة التحكم
+        function updateDashboardData() {
+            const counts = {
+                "جديد": 0, "تم الإشعار": 0, "تم التسكين": 0,
+                "تم الإخلاء": 0, "لم يراجع": 0, "رفض السكن": 0
+            };
+
+            const locations = {};
+            const categories = {};
+
+            requestsData.forEach(r => {
+                if (counts[r.status] !== undefined) counts[r.status]++;
+                locations[r.location] = (locations[r.location] || 0) + 1;
+                categories[r.category] = (categories[r.category] || 0) + 1;
+            });
+
+            document.getElementById('stat-total').innerText = requestsData.length;
+            document.getElementById('stat-new').innerText = counts["جديد"];
+            document.getElementById('stat-notified').innerText = counts["تم الإشعار"];
+            document.getElementById('stat-housed').innerText = counts["تم التسكين"];
+            document.getElementById('stat-evacuated').innerText = counts["تم الإخلاء"];
+            document.getElementById('stat-not-reviewed').innerText = counts["لم يراجع"];
+            document.getElementById('stat-refused').innerText = counts["رفض السكن"];
+
+            const locContainer = document.getElementById('locationList');
+            locContainer.innerHTML = '';
+            for (let loc in locations) {
+                locContainer.innerHTML += `
+                    <div class="list-item">
+                        <span>${loc}</span>
+                        <strong class="badge">${locations[loc]}</strong>
+                    </div>`;
+            }
+
+            const catContainer = document.getElementById('categoryList');
+            catContainer.innerHTML = '';
+            for (let cat in categories) {
+                catContainer.innerHTML += `
+                    <div class="list-item">
+                        <span>${cat}</span>
+                        <strong class="badge">${categories[cat]}</strong>
+                    </div>`;
+            }
+        }
+
+        // عرض الجدول مع التصفية
+        function renderRequestsTable() {
+            const searchVal = document.getElementById('filterSearch').value.trim().toLowerCase();
+            const statusVal = document.getElementById('filterStatus').value;
+            const locationVal = document.getElementById('filterLocation').value;
+
+            const tbody = document.getElementById('requestsTableBody');
+            tbody.innerHTML = '';
+
+            const filtered = requestsData.filter(r => {
+                const matchSearch = r.full_name.toLowerCase().includes(searchVal) || r.employee_number.includes(searchVal);
+                const matchStatus = !statusVal || r.status === statusVal;
+                const matchLocation = !locationVal || r.location === locationVal;
+                return matchSearch && matchStatus && matchLocation;
+            });
+
+            document.getElementById('resultsCount').innerText = filtered.length;
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding: 20px;">لا توجد نتائج مطابقة للبحث</td></tr>';
+                return;
+            }
+
+            filtered.forEach((r) => {
+                let badgeClass = "status-new";
+                if(r.status === "تم الإشعار") badgeClass = "status-notified";
+                if(r.status === "تم التسكين") badgeClass = "status-housed";
+                if(r.status === "تم الإخلاء") badgeClass = "status-evacuated";
+                if(r.status === "لم يراجع") badgeClass = "status-not-reviewed";
+                if(r.status === "رفض السكن") badgeClass = "status-refused";
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${r.id}</td>
+                        <td><strong>${r.full_name}</strong></td>
+                        <td>${r.employee_number}</td>
+                        <td>${r.category}</td>
+                        <td>${r.rank}</td>
+                        <td>${r.unit}</td>
+                        <td>${r.location}</td>
+                        <td><span class="status-badge ${badgeClass}">${r.status}</span></td>
+                        <td>${r.request_date}</td>
+                        <td>
+                            <button class="view-btn" onclick="viewRequestDetails(${r.id})" title="عرض التفاصيل">👁️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function resetFilters() {
+            document.getElementById('filterSearch').value = '';
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterLocation').value = '';
+            renderRequestsTable();
+        }
+
+        // تغيير الرتب والمواقع بناءً على الفئة
+        function onCategoryChange() {
+            const category = document.getElementById("categorySelect").value;
+            const rankSelect = document.getElementById("rankSelect");
+            const locationSelect = document.getElementById("locationSelect");
+
+            rankSelect.innerHTML = '<option value="">اختر الرتبة...</option>';
+            locationSelect.innerHTML = '<option value="">اختر الموقع...</option>';
+
+            if (!category) {
+                rankSelect.disabled = true;
+                locationSelect.disabled = true;
+                return;
+            }
+
+            rankSelect.disabled = false;
+            locationSelect.disabled = false;
+
+            let ranks = [];
+            if (category === "ضباط 1") {
+                ranks = ["عقيد", "عميد", "لواء", "فريق", "فريق أول"];
+            } else if (category === "ضباط 2") {
+                ranks = ["ملازم", "ملازم أول", "نقيب", "رائد", "مقدم"];
+            } else if (category === "أفراد") {
+                ranks = ["جندي", "جندي أول", "عريف", "وكيل رقيب", "رقيب", "رقيب أول", "رئيس رقباء"];
+            }
+
+            ranks.forEach(r => {
+                const opt = document.createElement("option");
+                opt.value = r;
+                opt.textContent = r;
+                rankSelect.appendChild(opt);
+            });
+
+            let locations = ["الطائف", "الجبالات"];
+            locations.forEach(loc => {
+                const opt = document.createElement("option");
+                opt.value = loc;
+                opt.textContent = loc;
+                locationSelect.appendChild(opt);
+            });
+        }
+
+        // إضافة طلب جديد
+        function handleAddRequestSubmit(e) {
+            e.preventDefault();
+            const empNum = document.getElementById('empNumber').value.trim();
+            
+            if (requestsData.some(r => r.employee_number === empNum)) {
+                document.getElementById('empNumError').style.display = 'block';
+                return;
+            }
+
+            const newReq = {
+                id: 100 + requestsData.length + 1,
+                full_name: document.getElementById('fullName').value.trim(),
+                employee_number: empNum,
+                category: document.getElementById('categorySelect').value,
+                rank: document.getElementById('rankSelect').value,
+                unit: document.getElementById('unitInput').value.trim(),
+                location: document.getElementById('locationSelect').value,
+                status: "جديد",
+                request_date: new Date().toISOString().split('T')[0],
+                notes: document.getElementById('notesInput').value.trim() || "لا توجد ملاحظات إضافية"
+            };
+
+            requestsData.unshift(newReq);
+            alert("✅ تم حفظ الطلب الجديد بنجاح!");
+            
+            document.getElementById('addRequestForm').reset();
+            document.getElementById('rankSelect').disabled = true;
+            document.getElementById('locationSelect').disabled = true;
+            document.getElementById('empNumError').style.display = 'none';
+
+            switchPage('requests');
+        }
+
+        // عرض تفاصيل طلب معين
+        function viewRequestDetails(reqId) {
+            const req = requestsData.find(r => r.id === reqId);
+            if (!req) return;
+
+            document.getElementById('detail-id').innerText = "#" + req.id;
+            document.getElementById('detail-name').innerText = req.full_name;
+            document.getElementById('detail-emp').innerText = req.employee_number;
+            document.getElementById('detail-cat').innerText = req.category;
+            document.getElementById('detail-rank').innerText = req.rank;
+            document.getElementById('detail-unit').innerText = req.unit;
+            document.getElementById('detail-loc').innerText = req.location;
+            document.getElementById('detail-date').innerText = req.request_date;
+            document.getElementById('detail-notes').innerText = req.notes;
+
+            const badge = document.getElementById('detail-status-badge');
+            badge.innerText = req.status;
+            badge.className = "status-badge";
+            if(req.status === "جديد") badge.classList.add("status-new");
+            if(req.status === "تم الإشعار") badge.classList.add("status-notified");
+            if(req.status === "تم التسكين") badge.classList.add("status-housed");
+            if(req.status === "تم الإخلاء") badge.classList.add("status-evacuated");
+            if(req.status === "لم يراجع") badge.classList.add("status-not-reviewed");
+            if(req.status === "رفض السكن") badge.classList.add("status-refused");
+
+            const timeline = document.getElementById('timelineContainer');
+            timeline.innerHTML = `
+                <div class="timeline-item completed">
+                    <div class="timeline-icon">✓</div>
+                    <div class="timeline-content">
+                        <h3>تقديم الطلب</h3>
+                        <span>${req.request_date}</span>
+                        <p>تم تسجيل وتوثيق بيانات الطلب بالكامل.</p>
+                    </div>
+                </div>
+            `;
+
+            if(req.status === "تم الإشعار" || req.status === "تم التسكين" || req.status === "تم الإخلاء") {
+                timeline.innerHTML += `
+                    <div class="timeline-item completed">
+                        <div class="timeline-icon">✓</div>
+                        <div class="timeline-content">
+                            <h3>الإشعار وتوفر السكن</h3>
+                            <span>تاريخ الإشعار</span>
+                            <p>تم إشعار المستفيد بتوفر الموقع المناسب.</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if(req.status === "تم التسكين") {
+                timeline.innerHTML += `
+                    <div class="timeline-item completed">
+                        <div class="timeline-icon">✓</div>
+                        <div class="timeline-content">
+                            <h3>اعتماد التسكين وتسليم الوحدة</h3>
+                            <span>تاريخ التسكين</span>
+                            <p>تم استكمال تسليم المرفق السكني.</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            switchPage('request-details');
+        }
+
+        // التحقق المباشر عند كتابة الرقم الوظيفي
+        document.addEventListener("DOMContentLoaded", () => {
+            const empInput = document.getElementById("empNumber");
+            if (empInput) {
+                empInput.addEventListener("input", () => {
+                    const errorMsg = document.getElementById("empNumError");
+                    if (requestsData.some(r => r.employee_number === empInput.value.trim())) {
+                        errorMsg.style.display = "block";
+                        empInput.style.borderColor = "red";
+                    } else {
+                        errorMsg.style.display = "none";
+                        empInput.style.borderColor = "#d8d8d8";
+                    }
+                });
+            }
+            updateDashboardData();
+        });
+    </script>
 </body>
-
 </html>
