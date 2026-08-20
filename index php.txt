@@ -1,0 +1,98 @@
+<?php
+
+session_start();
+require_once "db.php";
+
+$error = "";
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+
+    $username = trim($_POST["username"] ?? "");
+    $password = trim($_POST["password"] ?? "");
+
+    $stmt = $conn->prepare(
+        "SELECT id, username, password, role 
+         FROM users 
+         WHERE username = ? 
+         LIMIT 1"
+    );
+
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+
+    if ($result->num_rows === 1) {
+
+        $user = $result->fetch_assoc();
+
+        if ($password === $user["password"]) {
+
+            $_SESSION["user_id"] = $user["id"];
+            $_SESSION["username"] = $user["username"];
+            $_SESSION["role"] = $user["role"];
+
+            header("Location: admin-dashboard.php");
+            exit;
+
+        } else {
+            $error = "اسم المستخدم أو كلمة المرور غير صحيحة.";
+        }
+
+    } else {
+        $error = "اسم المستخدم أو كلمة المرور غير صحيحة.";
+    }
+
+    $stmt->close();
+}
+?>
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة الإسكان</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="login-box">
+
+    <img src="images/logo.png" class="logo">
+
+    <h1>نظام إدارة الإسكان</h1>
+
+    <p>
+        إدارة تشغيل وصيانة المنشآت العسكرية بالطائف
+    </p>
+<?php if ($error !== ""): ?>
+    <p style="color:red; text-align:center;">
+        <?= htmlspecialchars($error) ?>
+    </p>
+<?php endif; ?>
+
+   <form action="index.php" method="POST">
+
+    <label>اسم المستخدم</label>
+    <input type="text" name="username" placeholder="أدخل اسم المستخدم" required>
+
+    <label>كلمة المرور</label>
+    <input type="password" name="password" placeholder="أدخل كلمة المرور" required>
+
+    <button type="submit">
+        تسجيل الدخول
+    </button>
+
+</form>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+
+</html>
