@@ -1,0 +1,724 @@
+<?php
+
+require_once "db.php";
+
+
+/* =====================================================
+   جلب عدد الطلبات حسب الحالة
+===================================================== */
+
+function getStatusCount($conn, $status)
+{
+    $stmt = $conn->prepare(
+        "SELECT COUNT(*) AS total
+         FROM requests
+         WHERE status = ?"
+    );
+
+    $stmt->bind_param("s", $status);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+
+    $stmt->close();
+
+    return (int)$row["total"];
+}
+
+
+/* =====================================================
+   الإحصائيات حسب الحالة
+===================================================== */
+
+$newCount = getStatusCount($conn, "جديد");
+
+$notifiedCount = getStatusCount($conn, "تم الإشعار");
+
+$housedCount = getStatusCount($conn, "تم التسكين");
+
+$evacuatedCount = getStatusCount($conn, "تم الإخلاء");
+
+$notReviewedCount = getStatusCount($conn, "لم يراجع");
+
+$refusedCount = getStatusCount($conn, "رفض السكن");
+
+
+/* =====================================================
+   إجمالي الطلبات
+===================================================== */
+
+$result = $conn->query("
+    SELECT COUNT(*) AS total
+    FROM requests
+");
+
+$row = $result->fetch_assoc();
+
+$totalRequests = (int)$row["total"];
+
+
+/* =====================================================
+   توزيع المواقع
+===================================================== */
+
+$locations = [];
+
+$result = $conn->query("
+    SELECT
+        location,
+        COUNT(*) AS total
+    FROM requests
+    GROUP BY location
+    ORDER BY total DESC
+");
+
+if ($result) {
+
+    while ($row = $result->fetch_assoc()) {
+
+        $locations[] = $row;
+
+    }
+
+}
+
+
+/* =====================================================
+   توزيع الفئات
+===================================================== */
+
+$categories = [];
+
+$result = $conn->query("
+    SELECT
+        category,
+        COUNT(*) AS total
+    FROM requests
+    GROUP BY category
+    ORDER BY total DESC
+");
+
+if ($result) {
+
+    while ($row = $result->fetch_assoc()) {
+
+        $categories[] = $row;
+
+    }
+
+}
+
+
+/* =====================================================
+   تنبيه الطلبات القريبة من انتهاء 6 أشهر
+===================================================== */
+
+/*
+   نحسب الطلبات التي بقي على انتهاء مهلة
+   الـ 6 أشهر منها 15 يوم أو أقل.
+
+   ونستبعد الطلبات التي تم إخلاؤها أو رفض السكن.
+*/
+
+$warningCount = 0;
+
+$result = $conn->query("
+    SELECT COUNT(*) AS total
+    FROM requests
+    WHERE request_date IS NOT NULL
+      AND status NOT IN ('تم الإخلاء', 'رفض السكن')
+      AND DATE_ADD(request_date, INTERVAL 6 MONTH)
+          BETWEEN CURDATE()
+          AND DATE_ADD(CURDATE(), INTERVAL 15 DAY)
+");
+
+if ($result) {
+
+    $row = $result->fetch_assoc();
+
+    $warningCount = (int)$row["total"];
+
+}
+
+?>
+
+<!DOCTYPE html>
+
+<html lang="ar" dir="rtl">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        نظام إدارة الإسكان - لوحة التحكم
+    </title>
+
+    <link rel="stylesheet"
+          href="style.css">
+
+</head>
+
+
+<body class="dashboard-body">
+
+
+<!-- =====================================================
+     القائمة الجانبية
+===================================================== -->
+
+<aside class="sidebar">
+
+    <div>
+
+        <div class="sidebar-header">
+
+            <img
+                src="images/logo.png"
+                class="sidebar-logo"
+                alt="الشعار"
+            >
+
+            <h2>
+                إدارة الإسكان
+            </h2>
+
+            <p>
+                إدارة تشغيل وصيانة المنشآت العسكرية بالطائف
+            </p>
+
+        </div>
+
+
+        <nav class="sidebar-menu">
+
+
+            <a
+                href="admin-dashboard.php"
+                class="menu-item active"
+            >
+
+                <span>📊</span>
+
+                لوحة التحكم
+
+            </a>
+
+
+            <a
+                href="requests.php"
+                class="menu-item"
+            >
+
+                <span>📋</span>
+
+                الطلبات
+
+            </a>
+
+
+            <a
+                href="add-request.html"
+                class="menu-item"
+            >
+
+                <span>➕</span>
+
+                طلب جديد
+
+            </a>
+
+
+            <a
+                href="reports.php"
+                class="menu-item"
+            >
+
+                <span>📈</span>
+
+                التقارير
+
+            </a>
+
+
+            <a
+                href="archive.php"
+                class="menu-item"
+            >
+
+                <span>📁</span>
+
+                الأرشيف
+
+            </a>
+
+
+        </nav>
+
+    </div>
+
+
+    <!-- معلومات المستخدم -->
+
+    <div class="sidebar-footer">
+
+        <div class="user-info">
+
+            <div class="avatar">
+                👤
+            </div>
+
+            <div>
+
+                <strong>
+                    مستخدم النظام
+                </strong>
+
+                <small>
+                    مدير النظام
+                </small>
+
+            </div>
+
+        </div>
+
+<a href="change-password.php" class="logout-btn">
+    🔑 تغيير كلمة المرور
+
+        <a
+            href="index.php"
+            class="logout-btn"
+        >
+
+            🚪 تسجيل الخروج
+
+        </a>
+
+    </div>
+
+</aside>
+
+
+
+<!-- =====================================================
+     المحتوى الرئيسي
+===================================================== -->
+
+<main class="main-content">
+
+
+    <!-- الهيدر -->
+
+    <header class="top-header">
+
+        <div>
+
+            <h1>
+                لوحة التحكم
+            </h1>
+
+            <p>
+                نظرة عامة على النظام والإحصائيات الحالية
+            </p>
+
+        </div>
+
+
+        <div class="welcome-badge">
+
+            ✅ مرحباً بك في النظام
+
+        </div>
+
+    </header>
+
+
+
+    <!-- =================================================
+         تنبيه انتهاء مهلة 6 أشهر
+    ================================================= -->
+
+    <?php if ($warningCount > 0): ?>
+
+        <div class="alert-banner warning">
+
+            <span class="alert-icon">
+                ⚠️
+            </span>
+
+            <div class="alert-text">
+
+                <strong>
+                    تنبيه هام:
+                </strong>
+
+                يوجد
+
+                <span>
+                    <?= $warningCount ?>
+                </span>
+
+                طلب متبقي لها أقل من 15 يوم قبل انتهاء مهلة الـ 6 أشهر.
+
+            </div>
+
+        </div>
+
+    <?php endif; ?>
+
+
+
+    <!-- =================================================
+         إجمالي الطلبات
+    ================================================= -->
+
+    <section class="detail-card"
+             style="margin-bottom:20px;">
+
+        <h3>
+            📊 إجمالي الطلبات
+        </h3>
+
+        <div class="list-item">
+
+            <span>
+                جميع الطلبات
+            </span>
+
+            <strong class="badge">
+
+                <?= $totalRequests ?>
+
+            </strong>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         بطاقات الإحصائيات
+    ================================================= -->
+
+    <section class="stats-grid">
+
+
+        <!-- جديد -->
+
+        <div class="stat-card border-blue">
+
+            <div class="stat-info">
+
+                <span class="stat-num">
+                    <?= $newCount ?>
+                </span>
+
+                <span class="stat-label">
+                    جديد
+                </span>
+
+            </div>
+
+            <div class="stat-icon icon-blue">
+                📄
+            </div>
+
+        </div>
+
+
+
+        <!-- تم الإشعار -->
+
+        <div class="stat-card border-yellow">
+
+            <div class="stat-info">
+
+                <span class="stat-num">
+                    <?= $notifiedCount ?>
+                </span>
+
+                <span class="stat-label">
+                    تم الإشعار
+                </span>
+
+            </div>
+
+            <div class="stat-icon icon-yellow">
+                🔔
+            </div>
+
+        </div>
+
+
+
+        <!-- تم التسكين -->
+
+        <div class="stat-card border-green">
+
+            <div class="stat-info">
+
+                <span class="stat-num">
+                    <?= $housedCount ?>
+                </span>
+
+                <span class="stat-label">
+                    تم التسكين
+                </span>
+
+            </div>
+
+            <div class="stat-icon icon-green">
+                🏠
+            </div>
+
+        </div>
+
+
+
+        <!-- تم الإخلاء -->
+
+        <div class="stat-card border-dark">
+
+            <div class="stat-info">
+
+                <span class="stat-num">
+                    <?= $evacuatedCount ?>
+                </span>
+
+                <span class="stat-label">
+                    تم الإخلاء
+                </span>
+
+            </div>
+
+            <div class="stat-icon icon-dark">
+                🚪
+            </div>
+
+        </div>
+
+
+
+        <!-- لم يراجع -->
+
+        <div class="stat-card border-red">
+
+            <div class="stat-info">
+
+                <span class="stat-num">
+                    <?= $notReviewedCount ?>
+                </span>
+
+                <span class="stat-label">
+                    لم يراجع
+                </span>
+
+            </div>
+
+            <div class="stat-icon icon-red">
+                ⏳
+            </div>
+
+        </div>
+
+
+
+        <!-- رفض السكن -->
+
+        <div class="stat-card border-gray">
+
+            <div class="stat-info">
+
+                <span class="stat-num">
+                    <?= $refusedCount ?>
+                </span>
+
+                <span class="stat-label">
+                    رفض السكن
+                </span>
+
+            </div>
+
+            <div class="stat-icon icon-gray">
+                🚫
+            </div>
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =================================================
+         التفاصيل
+    ================================================= -->
+
+    <section class="dashboard-details">
+
+
+        <!-- الإجراءات السريعة -->
+
+        <div class="detail-card">
+
+            <h3>
+                ⚡ إجراءات سريعة
+            </h3>
+
+            <div class="quick-actions">
+
+                <a
+                    href="add-request.html"
+                    class="action-btn btn-green"
+                >
+                    + إضافة طلب جديد
+                </a>
+
+
+                <a
+                    href="reports.php"
+                    class="action-btn btn-yellow"
+                >
+                    📥 التقارير
+                </a>
+
+
+                <a
+                    href="requests.php"
+                    class="action-btn btn-outline"
+                >
+                    📋 عرض الطلبات
+                </a>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             توزيع المواقع
+        ================================================= -->
+
+        <div class="detail-card">
+
+            <h3>
+                📍 توزيع المواقع
+            </h3>
+
+
+            <?php if (count($locations) > 0): ?>
+
+
+                <?php foreach ($locations as $location): ?>
+
+
+                    <div class="list-item">
+
+                        <span>
+
+                            <?= htmlspecialchars(
+                                $location["location"]
+                            ) ?>
+
+                        </span>
+
+
+                        <strong class="badge">
+
+                            <?= (int)$location["total"] ?>
+
+                        </strong>
+
+                    </div>
+
+
+                <?php endforeach; ?>
+
+
+            <?php else: ?>
+
+
+                <p>
+                    لا توجد بيانات.
+                </p>
+
+
+            <?php endif; ?>
+
+
+        </div>
+
+
+
+        <!-- =================================================
+             توزيع الفئات
+        ================================================= -->
+
+        <div class="detail-card">
+
+            <h3>
+                🎖️ توزيع الفئات
+            </h3>
+
+
+            <?php if (count($categories) > 0): ?>
+
+
+                <?php foreach ($categories as $category): ?>
+
+
+                    <div class="list-item">
+
+                        <span>
+
+                            <?= htmlspecialchars(
+                                $category["category"]
+                            ) ?>
+
+                        </span>
+
+
+                        <strong class="badge">
+
+                            <?= (int)$category["total"] ?>
+
+                        </strong>
+
+                    </div>
+
+
+                <?php endforeach; ?>
+
+
+            <?php else: ?>
+
+
+                <p>
+                    لا توجد بيانات.
+                </p>
+
+
+            <?php endif; ?>
+
+
+        </div>
+
+
+    </section>
+
+
+</main>
+
+
+<script src="script.js"></script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,829 @@
+<?php
+
+require_once "db.php";
+
+/* جلب جميع الطلبات من قاعدة البيانات */
+$sql = "
+    SELECT
+        request_number,
+        full_name,
+        employee_number,
+        category,
+        rank,
+        unit,
+        location,
+        status,
+        request_date
+    FROM requests
+    ORDER BY request_date ASC
+";
+
+$result = $conn->query($sql);
+
+if (!$result) {
+    die("حدث خطأ أثناء جلب الطلبات: " . $conn->error);
+}
+
+
+/* تحديد كلاس الحالة */
+function getStatusClass($status)
+{
+    switch ($status) {
+
+        case "تم الإشعار":
+            return "status-notified";
+
+        case "تم التسكين":
+            return "status-housed";
+
+        case "تم الإخلاء":
+            return "status-evacuated";
+
+        case "لم يراجع":
+            return "status-not-reviewed";
+
+        case "رفض السكن":
+            return "status-refused";
+
+        default:
+            return "status-new";
+    }
+}
+
+
+/* تنسيق التاريخ */
+function formatDate($date)
+{
+    if (!$date) {
+        return "";
+    }
+
+    return date("Y/m/d", strtotime($date));
+}
+
+?>
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        نظام إدارة الإسكان - الطلبات
+    </title>
+
+    <link rel="stylesheet"
+          href="style.css">
+
+</head>
+
+
+<body class="dashboard-body">
+
+
+<!-- القائمة الجانبية -->
+
+<aside class="sidebar">
+
+    <div>
+
+        <div class="sidebar-header">
+
+            <img src="images/logo.png"
+                 class="sidebar-logo"
+                 alt="الشعار">
+
+            <h2>
+                إدارة الإسكان
+            </h2>
+
+            <p>
+                إدارة تشغيل وصيانة المنشآت العسكرية بالطائف
+            </p>
+
+        </div>
+
+
+        <nav class="sidebar-menu">
+
+            <a href="./admin-dashboard.php"
+               class="menu-item">
+
+                <span>📊</span>
+                لوحة التحكم
+
+            </a>
+
+
+            <a href="requests.php"
+               class="menu-item active">
+
+                <span>📋</span>
+                الطلبات
+
+            </a>
+
+
+            <a href="add-request.html"
+               class="menu-item">
+
+                <span>➕</span>
+                طلب جديد
+
+            </a>
+
+
+            <a href="reports.php"
+               class="menu-item">
+
+                <span>📈</span>
+                التقارير
+
+            </a>
+
+
+            <a href="archive.php"
+               class="menu-item">
+
+                <span>📁</span>
+                الأرشيف
+
+            </a>
+
+        </nav>
+
+    </div>
+
+
+    <!-- معلومات المستخدم -->
+
+    <div class="sidebar-footer">
+
+        <div class="user-info">
+
+            <div class="avatar">
+                👤
+            </div>
+
+            <div>
+
+                <strong>
+                    مستخدم النظام
+                </strong>
+
+                <small>
+                    موظف الإسكان
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <a href="index.php"
+           class="logout-btn">
+
+            🚪 تسجيل الخروج
+
+        </a>
+
+    </div>
+
+</aside>
+
+
+
+<!-- المحتوى الرئيسي -->
+
+<main class="main-content">
+
+
+    <!-- العنوان -->
+
+    <header class="top-header">
+
+        <div>
+
+            <h1>
+                جميع الطلبات
+            </h1>
+
+            <p>
+                عرض وإدارة جميع طلبات الإسكان
+            </p>
+
+        </div>
+
+
+        <a href="add-request.html"
+           class="requests-add-btn">
+
+            ➕ إضافة طلب جديد
+
+        </a>
+
+    </header>
+
+
+
+    <!-- البحث والفلاتر -->
+
+    <section class="requests-filters">
+
+
+        <div class="filter-group">
+
+            <label for="searchName">
+                البحث بالاسم
+            </label>
+
+            <input
+                type="text"
+                id="searchName"
+                placeholder="اكتب اسم المستفيد..."
+            >
+
+        </div>
+
+
+        <div class="filter-group">
+
+            <label for="searchNumber">
+                الرقم الوظيفي
+            </label>
+
+            <input
+                type="text"
+                id="searchNumber"
+                placeholder="اكتب الرقم الوظيفي..."
+            >
+
+        </div>
+
+
+        <div class="filter-group">
+
+            <label for="statusFilter">
+                الحالة
+            </label>
+
+            <select id="statusFilter">
+
+                <option value="">
+                    جميع الحالات
+                </option>
+
+                <option value="جديد">
+                    جديد
+                </option>
+
+                <option value="تم الإشعار">
+                    تم الإشعار
+                </option>
+
+                <option value="تم التسكين">
+                    تم التسكين
+                </option>
+
+                <option value="تم الإخلاء">
+                    تم الإخلاء
+                </option>
+
+                <option value="رفض السكن">
+                    رفض السكن
+                </option>
+
+                <option value="لم يراجع">
+                    لم يراجع
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="filter-group">
+
+            <label for="locationFilter">
+                الموقع
+            </label>
+
+            <select id="locationFilter">
+
+                <option value="">
+                    جميع المواقع
+                </option>
+
+                <option value="الطائف">
+                    الطائف
+                </option>
+
+                <option value="الجبالات">
+                    الجبالات
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="filter-group">
+
+            <label for="rankFilter">
+                الرتبة
+            </label>
+
+            <select id="rankFilter">
+
+                <option value="">
+                    جميع الرتب
+                </option>
+
+                <optgroup label="ضباط 1">
+
+                    <option value="عقيد">عقيد</option>
+                    <option value="عميد">عميد</option>
+                    <option value="لواء">لواء</option>
+                    <option value="فريق">فريق</option>
+                    <option value="فريق أول">فريق أول</option>
+
+                </optgroup>
+
+
+                <optgroup label="ضباط 2">
+
+                    <option value="ملازم">ملازم</option>
+                    <option value="ملازم أول">ملازم أول</option>
+                    <option value="نقيب">نقيب</option>
+                    <option value="رائد">رائد</option>
+                    <option value="مقدم">مقدم</option>
+
+                </optgroup>
+
+
+                <optgroup label="أفراد">
+
+                    <option value="جندي">جندي</option>
+                    <option value="جندي أول">جندي أول</option>
+                    <option value="عريف">عريف</option>
+                    <option value="وكيل رقيب">وكيل رقيب</option>
+                    <option value="رقيب">رقيب</option>
+                    <option value="رقيب أول">رقيب أول</option>
+                    <option value="رئيس رقباء">رئيس رقباء</option>
+
+                </optgroup>
+
+            </select>
+
+        </div>
+
+
+        <div class="filter-group">
+
+            <label for="dateSort">
+                ترتيب الطلبات
+            </label>
+
+            <select id="dateSort">
+
+                <option value="oldest">
+                    الأقدم أولاً
+                </option>
+
+                <option value="newest">
+                    الأحدث أولاً
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="reset-filter-btn"
+            onclick="resetFilters()">
+
+            ↻ إعادة ضبط
+
+        </button>
+
+    </section>
+
+
+
+    <!-- عدد النتائج -->
+
+    <div class="requests-info">
+
+        <strong>
+            الطلبات
+        </strong>
+
+        <span id="resultsCount">
+            <?= $result->num_rows ?> طلبات
+        </span>
+
+    </div>
+
+
+
+    <!-- جدول الطلبات -->
+
+    <section class="requests-table-card">
+
+        <div class="table-wrapper">
+
+            <table class="requests-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>رقم الطلب</th>
+                        <th>الاسم</th>
+                        <th>الرقم الوظيفي</th>
+                        <th>الرتبة</th>
+                        <th>الفئة</th>
+                        <th>الوحدة</th>
+                        <th>الموقع</th>
+                        <th>الحالة</th>
+                        <th>تاريخ الطلب</th>
+                        <th>عرض</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="requestsTableBody">
+
+
+                <?php if ($result->num_rows > 0): ?>
+
+
+                    <?php while ($request = $result->fetch_assoc()): ?>
+
+
+                        <tr
+
+                            data-name="<?= htmlspecialchars($request["full_name"]) ?>"
+
+                            data-number="<?= htmlspecialchars($request["employee_number"]) ?>"
+
+                            data-status="<?= htmlspecialchars($request["status"]) ?>"
+
+                            data-location="<?= htmlspecialchars($request["location"]) ?>"
+
+                            data-rank="<?= htmlspecialchars($request["rank"]) ?>"
+
+                            data-date="<?= htmlspecialchars($request["request_date"]) ?>"
+
+                        >
+
+
+                            <td>
+
+                                <?= htmlspecialchars($request["request_number"]) ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <?= htmlspecialchars($request["full_name"]) ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <?= htmlspecialchars($request["employee_number"]) ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <?= htmlspecialchars($request["rank"]) ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <?= htmlspecialchars($request["category"]) ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <?= htmlspecialchars($request["unit"]) ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <?= htmlspecialchars($request["location"]) ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <span class="status-badge <?= getStatusClass($request["status"]) ?>">
+
+                                    <?= htmlspecialchars($request["status"]) ?>
+
+                                </span>
+
+                            </td>
+
+
+                            <td>
+
+                                <?= formatDate($request["request_date"]) ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <a
+                                    href="view-request.php?id=<?= urlencode($request["request_number"]) ?>"
+                                    class="view-btn"
+                                    title="عرض الطلب">
+
+                                    👁️
+
+                                </a>
+
+                            </td>
+
+
+                        </tr>
+
+
+                    <?php endwhile; ?>
+
+
+                <?php else: ?>
+
+
+                    <tr>
+
+                        <td colspan="10"
+                            style="text-align:center; padding:30px;">
+
+                            لا توجد طلبات مسجلة حالياً.
+
+                        </td>
+
+                    </tr>
+
+
+                <?php endif; ?>
+
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+</main>
+
+
+
+<!-- البحث والفلاتر -->
+
+<script>
+
+const searchName =
+    document.getElementById("searchName");
+
+const searchNumber =
+    document.getElementById("searchNumber");
+
+const statusFilter =
+    document.getElementById("statusFilter");
+
+const locationFilter =
+    document.getElementById("locationFilter");
+
+const rankFilter =
+    document.getElementById("rankFilter");
+
+const dateSort =
+    document.getElementById("dateSort");
+
+const tableBody =
+    document.getElementById("requestsTableBody");
+
+const resultsCount =
+    document.getElementById("resultsCount");
+
+
+function filterRequests() {
+
+    const nameValue =
+        searchName.value.trim().toLowerCase();
+
+    const numberValue =
+        searchNumber.value.trim();
+
+    const statusValue =
+        statusFilter.value;
+
+    const locationValue =
+        locationFilter.value;
+
+    const rankValue =
+        rankFilter.value;
+
+
+    const rows =
+        Array.from(
+            tableBody.querySelectorAll("tr")
+        );
+
+
+    let visibleRows = 0;
+
+
+    rows.forEach(row => {
+
+        if (!row.dataset.name) {
+            return;
+        }
+
+
+        const name =
+            row.dataset.name.toLowerCase();
+
+        const number =
+            row.dataset.number;
+
+        const status =
+            row.dataset.status;
+
+        const location =
+            row.dataset.location;
+
+        const rank =
+            row.dataset.rank;
+
+
+        const matchName =
+            name.includes(nameValue);
+
+        const matchNumber =
+            number.includes(numberValue);
+
+        const matchStatus =
+            !statusValue ||
+            status === statusValue;
+
+        const matchLocation =
+            !locationValue ||
+            location === locationValue;
+
+        const matchRank =
+            !rankValue ||
+            rank === rankValue;
+
+
+        const show =
+            matchName &&
+            matchNumber &&
+            matchStatus &&
+            matchLocation &&
+            matchRank;
+
+
+        row.style.display =
+            show ? "" : "none";
+
+
+        if (show) {
+            visibleRows++;
+        }
+
+    });
+
+
+    resultsCount.textContent =
+        visibleRows + " طلبات";
+
+}
+
+
+function sortRequests() {
+
+    const rows =
+        Array.from(
+            tableBody.querySelectorAll("tr[data-date]")
+        );
+
+
+    rows.sort((a, b) => {
+
+        const dateA =
+            new Date(a.dataset.date);
+
+        const dateB =
+            new Date(b.dataset.date);
+
+
+        if (dateSort.value === "newest") {
+
+            return dateB - dateA;
+
+        }
+
+        return dateA - dateB;
+
+    });
+
+
+    rows.forEach(row => {
+
+        tableBody.appendChild(row);
+
+    });
+
+
+    filterRequests();
+
+}
+
+
+function resetFilters() {
+
+    searchName.value = "";
+
+    searchNumber.value = "";
+
+    statusFilter.value = "";
+
+    locationFilter.value = "";
+
+    rankFilter.value = "";
+
+    dateSort.value = "oldest";
+
+
+    sortRequests();
+
+}
+
+
+searchName.addEventListener(
+    "input",
+    filterRequests
+);
+
+searchNumber.addEventListener(
+    "input",
+    filterRequests
+);
+
+statusFilter.addEventListener(
+    "change",
+    filterRequests
+);
+
+locationFilter.addEventListener(
+    "change",
+    filterRequests
+);
+
+rankFilter.addEventListener(
+    "change",
+    filterRequests
+);
+
+dateSort.addEventListener(
+    "change",
+    sortRequests
+);
+
+
+sortRequests();
+
+</script>
+
+
+</body>
+
+</html>

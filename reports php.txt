@@ -1,0 +1,610 @@
+<?php
+
+require_once "db.php";
+
+/* =========================
+   إحصائيات الطلبات
+========================= */
+
+$total = 0;
+$new = 0;
+$notified = 0;
+$housed = 0;
+$evacuated = 0;
+$notReviewed = 0;
+$refused = 0;
+
+
+/* العدد الإجمالي */
+
+$result = $conn->query("
+    SELECT COUNT(*) AS total
+    FROM requests
+");
+
+if ($result) {
+
+    $row = $result->fetch_assoc();
+
+    $total = (int)$row["total"];
+}
+
+
+/* عدد الطلبات حسب الحالة */
+
+$result = $conn->query("
+    SELECT status, COUNT(*) AS total
+    FROM requests
+    GROUP BY status
+");
+
+if ($result) {
+
+    while ($row = $result->fetch_assoc()) {
+
+        switch ($row["status"]) {
+
+            case "جديد":
+                $new = (int)$row["total"];
+                break;
+
+            case "تم الإشعار":
+                $notified = (int)$row["total"];
+                break;
+
+            case "تم التسكين":
+                $housed = (int)$row["total"];
+                break;
+
+            case "تم الإخلاء":
+                $evacuated = (int)$row["total"];
+                break;
+
+            case "لم يراجع":
+                $notReviewed = (int)$row["total"];
+                break;
+
+            case "رفض السكن":
+                $refused = (int)$row["total"];
+                break;
+        }
+    }
+}
+
+
+/* =========================
+   توزيع المواقع
+========================= */
+
+$locations = [];
+
+$result = $conn->query("
+    SELECT location, COUNT(*) AS total
+    FROM requests
+    GROUP BY location
+    ORDER BY total DESC
+");
+
+if ($result) {
+
+    while ($row = $result->fetch_assoc()) {
+
+        $locations[] = $row;
+    }
+}
+
+
+/* =========================
+   توزيع الفئات
+========================= */
+
+$categories = [];
+
+$result = $conn->query("
+    SELECT category, COUNT(*) AS total
+    FROM requests
+    GROUP BY category
+    ORDER BY total DESC
+");
+
+if ($result) {
+
+    while ($row = $result->fetch_assoc()) {
+
+        $categories[] = $row;
+    }
+}
+
+
+/* =========================
+   تصدير Excel
+========================= */
+
+if (isset($_GET["export"]) && $_GET["export"] === "excel") {
+
+    header("Content-Type: application/vnd.ms-excel; charset=UTF-8");
+    header("Content-Disposition: attachment; filename=housing_reports.xls");
+
+    echo "\xEF\xBB\xBF";
+
+    echo "تقرير نظام إدارة الإسكان\n\n";
+
+    echo "الإحصائية\tالعدد\n";
+
+    echo "إجمالي الطلبات\t" . $total . "\n";
+    echo "جديد\t" . $new . "\n";
+    echo "تم الإشعار\t" . $notified . "\n";
+    echo "تم التسكين\t" . $housed . "\n";
+    echo "تم الإخلاء\t" . $evacuated . "\n";
+    echo "لم يراجع\t" . $notReviewed . "\n";
+    echo "رفض السكن\t" . $refused . "\n";
+
+    echo "\nتوزيع المواقع\n";
+    echo "الموقع\tالعدد\n";
+
+    foreach ($locations as $location) {
+
+        echo $location["location"] . "\t";
+        echo $location["total"] . "\n";
+    }
+
+    echo "\nتوزيع الفئات\n";
+    echo "الفئة\tالعدد\n";
+
+    foreach ($categories as $category) {
+
+        echo $category["category"] . "\t";
+        echo $category["total"] . "\n";
+    }
+
+    exit;
+}
+
+?>
+
+<!DOCTYPE html>
+
+<html lang="ar" dir="rtl">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        التقارير - نظام إدارة الإسكان
+    </title>
+
+    <link rel="stylesheet"
+          href="style.css">
+
+</head>
+
+
+<body class="dashboard-body">
+
+
+<!-- القائمة الجانبية -->
+
+<aside class="sidebar">
+
+    <div>
+
+        <div class="sidebar-header">
+
+            <img src="images/logo.png"
+                 class="sidebar-logo"
+                 alt="الشعار">
+
+            <h2>
+                إدارة الإسكان
+            </h2>
+
+            <p>
+                إدارة تشغيل وصيانة المنشآت العسكرية بالطائف
+            </p>
+
+        </div>
+
+
+        <nav class="sidebar-menu">
+
+            <a href="admin-dashboard.php"
+               class="menu-item">
+
+                <span>📊</span>
+                لوحة التحكم
+
+            </a>
+
+
+            <a href="requests.php"
+               class="menu-item">
+
+                <span>📋</span>
+                الطلبات
+
+            </a>
+
+
+            <a href="add-request.html"
+               class="menu-item">
+
+                <span>➕</span>
+                طلب جديد
+
+            </a>
+
+
+            <a href="reports.php"
+               class="menu-item active">
+
+                <span>📈</span>
+                التقارير
+
+            </a>
+
+
+            <a href="archive.php"
+               class="menu-item">
+
+                <span>📁</span>
+                الأرشيف
+
+            </a>
+
+        </nav>
+
+    </div>
+
+
+    <div class="sidebar-footer">
+
+        <div class="user-info">
+
+            <div class="avatar">
+                👤
+            </div>
+
+            <div>
+
+                <strong>
+                    مستخدم النظام
+                </strong>
+
+                <small>
+                    موظف الإسكان
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <a href="index.php"
+           class="logout-btn">
+
+            🚪 تسجيل الخروج
+
+        </a>
+
+    </div>
+
+</aside>
+
+
+
+<!-- المحتوى الرئيسي -->
+
+<main class="main-content">
+
+
+    <header class="top-header">
+
+        <div>
+
+            <h1>
+                التقارير والإحصائيات
+            </h1>
+
+            <p>
+                إحصائيات وبيانات نظام إدارة الإسكان
+            </p>
+
+        </div>
+
+
+        <!-- أزرار التصدير -->
+
+        <div class="quick-actions">
+
+            <a
+                href="reports.php?export=excel"
+                class="action-btn btn-green"
+            >
+                📥 تصدير Excel
+            </a>
+
+            <button
+                type="button"
+                class="action-btn btn-outline"
+                onclick="window.print()"
+            >
+                📄 طباعة / حفظ PDF
+            </button>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- الإحصائيات الرئيسية -->
+
+    <section class="stats-grid">
+
+
+        <div class="stat-card border-blue">
+
+            <div class="stat-info">
+
+                <span class="stat-num">
+                    <?= $new ?>
+                </span>
+
+                <span class="stat-label">
+                    جديد
+                </span>
+
+            </div>
+
+            <div class="stat-icon icon-blue">
+                📄
+            </div>
+
+        </div>
+
+
+
+        <div class="stat-card border-yellow">
+
+            <div class="stat-info">
+
+                <span class="stat-num">
+                    <?= $notified ?>
+                </span>
+
+                <span class="stat-label">
+                    تم الإشعار
+                </span>
+
+            </div>
+
+            <div class="stat-icon icon-yellow">
+                🔔
+            </div>
+
+        </div>
+
+
+
+        <div class="stat-card border-green">
+
+            <div class="stat-info">
+
+                <span class="stat-num">
+                    <?= $housed ?>
+                </span>
+
+                <span class="stat-label">
+                    تم التسكين
+                </span>
+
+            </div>
+
+            <div class="stat-icon icon-green">
+                🏠
+            </div>
+
+        </div>
+
+
+
+        <div class="stat-card border-dark">
+
+            <div class="stat-info">
+
+                <span class="stat-num">
+                    <?= $evacuated ?>
+                </span>
+
+                <span class="stat-label">
+                    تم الإخلاء
+                </span>
+
+            </div>
+
+            <div class="stat-icon icon-dark">
+                🚪
+            </div>
+
+        </div>
+
+
+
+        <div class="stat-card border-red">
+
+            <div class="stat-info">
+
+                <span class="stat-num">
+                    <?= $notReviewed ?>
+                </span>
+
+                <span class="stat-label">
+                    لم يراجع
+                </span>
+
+            </div>
+
+            <div class="stat-icon icon-red">
+                ⏳
+            </div>
+
+        </div>
+
+
+
+        <div class="stat-card border-gray">
+
+            <div class="stat-info">
+
+                <span class="stat-num">
+                    <?= $refused ?>
+                </span>
+
+                <span class="stat-label">
+                    رفض السكن
+                </span>
+
+            </div>
+
+            <div class="stat-icon icon-gray">
+                🚫
+            </div>
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- التفاصيل -->
+
+    <section class="dashboard-details">
+
+
+        <!-- إجمالي الطلبات -->
+
+        <div class="detail-card">
+
+            <h3>
+                📊 إجمالي الطلبات
+            </h3>
+
+            <div class="list-item">
+
+                <span>
+                    جميع الطلبات
+                </span>
+
+                <strong class="badge">
+                    <?= $total ?>
+                </strong>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- توزيع المواقع -->
+
+        <div class="detail-card">
+
+            <h3>
+                📍 توزيع المواقع
+            </h3>
+
+
+            <?php if (count($locations) > 0): ?>
+
+                <?php foreach ($locations as $location): ?>
+
+                    <div class="list-item">
+
+                        <span>
+
+                            <?= htmlspecialchars(
+                                $location["location"]
+                            ) ?>
+
+                        </span>
+
+                        <strong class="badge">
+
+                            <?= (int)$location["total"] ?>
+
+                        </strong>
+
+                    </div>
+
+                <?php endforeach; ?>
+
+            <?php else: ?>
+
+                <p>
+                    لا توجد بيانات.
+                </p>
+
+            <?php endif; ?>
+
+        </div>
+
+
+
+        <!-- توزيع الفئات -->
+
+        <div class="detail-card">
+
+            <h3>
+                🎖️ توزيع الفئات
+            </h3>
+
+
+            <?php if (count($categories) > 0): ?>
+
+                <?php foreach ($categories as $category): ?>
+
+                    <div class="list-item">
+
+                        <span>
+
+                            <?= htmlspecialchars(
+                                $category["category"]
+                            ) ?>
+
+                        </span>
+
+                        <strong class="badge">
+
+                            <?= (int)$category["total"] ?>
+
+                        </strong>
+
+                    </div>
+
+                <?php endforeach; ?>
+
+            <?php else: ?>
+
+                <p>
+                    لا توجد بيانات.
+                </p>
+
+            <?php endif; ?>
+
+        </div>
+
+
+    </section>
+
+
+</main>
+
+
+</body>
+
+</html>

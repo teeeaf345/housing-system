@@ -1,0 +1,730 @@
+<?php
+
+require_once "db.php";
+
+/* الحصول على رقم الطلب من الرابط */
+$request_number = $_GET["id"] ?? "";
+
+if ($request_number === "") {
+    die("رقم الطلب غير موجود.");
+}
+
+/* جلب بيانات الطلب */
+$stmt = $conn->prepare("
+    SELECT
+        request_number,
+        full_name,
+        employee_number,
+        category,
+        rank,
+        unit,
+        location,
+        status,
+        request_date,
+        notification_date,
+        housing_date,
+        evacuation_date,
+        notes
+    FROM requests
+    WHERE request_number = ?
+    LIMIT 1
+");
+
+$stmt->bind_param("i", $request_number);
+$stmt->execute();
+
+$result = $stmt->get_result();
+
+if ($result->num_rows === 0) {
+    die("الطلب غير موجود.");
+}
+
+$request = $result->fetch_assoc();
+
+$stmt->close();
+
+
+/* تحويل حالة الطلب إلى كلاس CSS */
+$statusClass = "status-new";
+
+switch ($request["status"]) {
+
+    case "تم الإشعار":
+        $statusClass = "status-notified";
+        break;
+
+    case "تم التسكين":
+        $statusClass = "status-housed";
+        break;
+
+    case "تم الإخلاء":
+        $statusClass = "status-evacuated";
+        break;
+
+    case "لم يراجع":
+        $statusClass = "status-not-reviewed";
+        break;
+
+    case "رفض السكن":
+        $statusClass = "status-refused";
+        break;
+}
+
+
+/* تنسيق التاريخ */
+function formatDate($date)
+{
+    if (!$date) {
+        return "لم يتم التسجيل";
+    }
+
+    return date("Y/m/d", strtotime($date));
+}
+
+?>
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        تفاصيل الطلب - نظام إدارة الإسكان
+    </title>
+
+    <link rel="stylesheet"
+          href="style.css">
+
+</head>
+
+
+<body class="dashboard-body">
+
+
+<!-- القائمة الجانبية -->
+
+<aside class="sidebar">
+
+    <div>
+
+        <div class="sidebar-header">
+
+            <img src="images/logo.png"
+                 class="sidebar-logo"
+                 alt="الشعار">
+
+            <h2>
+                إدارة الإسكان
+            </h2>
+
+            <p>
+                إدارة تشغيل وصيانة المنشآت العسكرية بالطائف
+            </p>
+
+        </div>
+
+
+        <nav class="sidebar-menu">
+
+            <a href="admin-dashboard.php"
+               class="menu-item">
+
+                <span>📊</span>
+                لوحة التحكم
+
+            </a>
+
+
+            <a href="requests.php"
+               class="menu-item active">
+
+                <span>📋</span>
+                الطلبات
+
+            </a>
+
+
+            <a href="add-request.html"
+               class="menu-item">
+
+                <span>➕</span>
+                طلب جديد
+
+            </a>
+
+
+            <a href="reports.php"
+               class="menu-item">
+
+                <span>📈</span>
+                التقارير
+
+            </a>
+
+
+            <a href="archive.php"
+               class="menu-item">
+
+                <span>📁</span>
+                الأرشيف
+
+            </a>
+
+        </nav>
+
+    </div>
+
+
+    <!-- معلومات المستخدم -->
+
+    <div class="sidebar-footer">
+
+        <div class="user-info">
+
+            <div class="avatar">
+                👤
+            </div>
+
+            <div>
+
+                <strong>
+                    مستخدم النظام
+                </strong>
+
+                <small>
+                    موظف الإسكان
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <a href="index.php"
+           class="logout-btn">
+
+            🚪 تسجيل الخروج
+
+        </a>
+
+    </div>
+
+</aside>
+
+
+
+<!-- المحتوى الرئيسي -->
+
+<main class="main-content">
+
+
+    <!-- رأس الصفحة -->
+
+    <header class="top-header">
+
+        <div>
+
+            <h1>
+                تفاصيل الطلب
+            </h1>
+
+            <p>
+                عرض جميع بيانات طلب الإسكان
+            </p>
+
+        </div>
+
+
+        <a href="requests.php"
+           class="back-btn">
+
+            ← العودة إلى الطلبات
+
+        </a>
+        <a
+    href="edit-request.php?id=<?= urlencode($request["request_number"]) ?>"
+    class="requests-add-btn"
+>
+    ✏️ تعديل الطلب
+</a>
+
+    </header>
+
+
+
+    <!-- بطاقة بيانات الطلب -->
+
+    <section class="request-details-card">
+
+
+        <div class="details-header">
+
+            <div>
+
+                <h2>
+                    بيانات صاحب الطلب
+                </h2>
+
+                <p>
+
+                    رقم الطلب:
+
+                    <strong>
+                        #<?= htmlspecialchars($request["request_number"]) ?>
+                    </strong>
+
+                </p>
+
+            </div>
+
+
+            <span class="status-badge <?= $statusClass ?>">
+
+                <?= htmlspecialchars($request["status"]) ?>
+
+            </span>
+
+        </div>
+
+
+
+        <!-- بيانات الطلب -->
+
+        <div class="details-grid">
+
+
+            <div class="detail-item">
+
+                <span class="detail-label">
+                    الاسم
+                </span>
+
+                <strong>
+                    <?= htmlspecialchars($request["full_name"]) ?>
+                </strong>
+
+            </div>
+
+
+
+            <div class="detail-item">
+
+                <span class="detail-label">
+                    الرقم الوظيفي
+                </span>
+
+                <strong>
+                    <?= htmlspecialchars($request["employee_number"]) ?>
+                </strong>
+
+            </div>
+
+
+
+            <div class="detail-item">
+
+                <span class="detail-label">
+                    الفئة
+                </span>
+
+                <strong>
+                    <?= htmlspecialchars($request["category"]) ?>
+                </strong>
+
+            </div>
+
+
+
+            <div class="detail-item">
+
+                <span class="detail-label">
+                    الرتبة
+                </span>
+
+                <strong>
+                    <?= htmlspecialchars($request["rank"]) ?>
+                </strong>
+
+            </div>
+
+
+
+            <div class="detail-item">
+
+                <span class="detail-label">
+                    الوحدة
+                </span>
+
+                <strong>
+                    <?= htmlspecialchars($request["unit"]) ?>
+                </strong>
+
+            </div>
+
+
+
+            <div class="detail-item">
+
+                <span class="detail-label">
+                    الموقع
+                </span>
+
+                <strong>
+                    <?= htmlspecialchars($request["location"]) ?>
+                </strong>
+
+            </div>
+
+
+
+            <div class="detail-item">
+
+                <span class="detail-label">
+                    تاريخ الطلب
+                </span>
+
+                <strong>
+                    <?= formatDate($request["request_date"]) ?>
+                </strong>
+
+            </div>
+
+
+
+            <div class="detail-item">
+
+                <span class="detail-label">
+                    تاريخ الإشعار
+                </span>
+
+                <strong>
+                    <?= formatDate($request["notification_date"]) ?>
+                </strong>
+
+            </div>
+
+
+
+            <div class="detail-item">
+
+                <span class="detail-label">
+                    تاريخ التسكين
+                </span>
+
+                <strong>
+                    <?= formatDate($request["housing_date"]) ?>
+                </strong>
+
+            </div>
+
+
+
+            <div class="detail-item">
+
+                <span class="detail-label">
+                    تاريخ الإخلاء
+                </span>
+
+                <strong>
+                    <?= formatDate($request["evacuation_date"]) ?>
+                </strong>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- الملاحظات -->
+
+        <div class="notes-section">
+
+            <span class="detail-label">
+                الملاحظات
+            </span>
+
+            <p>
+
+                <?= $request["notes"]
+                    ? nl2br(htmlspecialchars($request["notes"]))
+                    : "لا توجد ملاحظات." ?>
+
+            </p>
+
+        </div>
+
+
+    </section>
+    <!-- تغيير حالة الطلب -->
+
+<section class="request-details-card">
+
+    <div class="section-title">
+
+        <h2>تحديث حالة الطلب</h2>
+
+        <p>
+            يمكنك تغيير حالة الطلب وسيتم تسجيل التاريخ تلقائياً.
+        </p>
+
+    </div>
+
+    <form action="update-status.php" method="POST">
+
+        <input
+            type="hidden"
+            name="request_number"
+            value="<?= htmlspecialchars($request["request_number"]) ?>"
+        >
+
+        <div class="filter-group">
+
+            <label for="status">
+                الحالة الجديدة
+            </label>
+
+            <select
+                id="status"
+                name="status"
+                required
+            >
+
+                <option
+                    value="جديد"
+                    <?= $request["status"] === "جديد" ? "selected" : "" ?>
+                >
+                    جديد
+                </option>
+
+                <option
+                    value="تم الإشعار"
+                    <?= $request["status"] === "تم الإشعار" ? "selected" : "" ?>
+                >
+                    تم الإشعار
+                </option>
+
+                <option
+                    value="تم التسكين"
+                    <?= $request["status"] === "تم التسكين" ? "selected" : "" ?>
+                >
+                    تم التسكين
+                </option>
+
+                <option
+                    value="تم الإخلاء"
+                    <?= $request["status"] === "تم الإخلاء" ? "selected" : "" ?>
+                >
+                    تم الإخلاء
+                </option>
+
+                <option
+                    value="لم يراجع"
+                    <?= $request["status"] === "لم يراجع" ? "selected" : "" ?>
+                >
+                    لم يراجع
+                </option>
+
+                <option
+                    value="رفض السكن"
+                    <?= $request["status"] === "رفض السكن" ? "selected" : "" ?>
+                >
+                    رفض السكن
+                </option>
+
+            </select>
+
+        </div>
+
+        <button
+            type="submit"
+            class="requests-add-btn"
+            style="border:none; cursor:pointer; margin-top:15px;"
+        >
+            💾 حفظ الحالة
+        </button>
+
+    </form>
+
+</section>
+
+
+
+    <!-- سجل الطلب -->
+
+    <section class="timeline-card">
+
+
+        <div class="section-title">
+
+            <h2>
+                سجل الطلب
+            </h2>
+
+            <p>
+                التسلسل الزمني لجميع مراحل الطلب
+            </p>
+
+        </div>
+
+
+
+        <div class="timeline">
+
+
+            <!-- إنشاء الطلب -->
+
+            <div class="timeline-item completed">
+
+                <div class="timeline-icon">
+                    ✓
+                </div>
+
+                <div class="timeline-content">
+
+                    <h3>
+                        تم إنشاء الطلب
+                    </h3>
+
+                    <span>
+                        <?= formatDate($request["request_date"]) ?>
+                    </span>
+
+                    <p>
+                        تم تسجيل طلب الإسكان في النظام.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- الإشعار -->
+
+            <div class="timeline-item <?= $request["notification_date"] ? "completed" : "" ?>">
+
+                <div class="timeline-icon">
+                    <?= $request["notification_date"] ? "✓" : "2" ?>
+                </div>
+
+                <div class="timeline-content">
+
+                    <h3>
+                        تم الإشعار
+                    </h3>
+
+                    <span>
+                        <?= formatDate($request["notification_date"]) ?>
+                    </span>
+
+                    <p>
+
+                        <?php if ($request["notification_date"]): ?>
+
+                            تم إشعار صاحب الطلب.
+
+                        <?php else: ?>
+
+                            لم يتم إشعار صاحب الطلب حتى الآن.
+
+                        <?php endif; ?>
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- التسكين -->
+
+            <div class="timeline-item <?= $request["housing_date"] ? "completed" : "" ?>">
+
+                <div class="timeline-icon">
+                    <?= $request["housing_date"] ? "✓" : "3" ?>
+                </div>
+
+                <div class="timeline-content">
+
+                    <h3>
+                        تم التسكين
+                    </h3>
+
+                    <span>
+                        <?= formatDate($request["housing_date"]) ?>
+                    </span>
+
+                    <p>
+
+                        <?php if ($request["housing_date"]): ?>
+
+                            تم تسجيل عملية التسكين.
+
+                        <?php else: ?>
+
+                            لم يتم تسجيل عملية التسكين.
+
+                        <?php endif; ?>
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- الإخلاء -->
+
+            <div class="timeline-item <?= $request["evacuation_date"] ? "completed" : "" ?>">
+
+                <div class="timeline-icon">
+                    <?= $request["evacuation_date"] ? "✓" : "4" ?>
+                </div>
+
+                <div class="timeline-content">
+
+                    <h3>
+                        تم الإخلاء
+                    </h3>
+
+                    <span>
+                        <?= formatDate($request["evacuation_date"]) ?>
+                    </span>
+
+                    <p>
+
+                        <?php if ($request["evacuation_date"]): ?>
+
+                            تم تسجيل عملية الإخلاء.
+
+                        <?php else: ?>
+
+                            لم يتم تسجيل عملية الإخلاء.
+
+                        <?php endif; ?>
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+</main>
+
+</body>
+
+</html>

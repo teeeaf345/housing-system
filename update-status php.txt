@@ -1,0 +1,118 @@
+<?php
+
+require_once "db.php";
+
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+    header("Location: requests.php");
+    exit;
+}
+
+$request_number = $_POST["request_number"] ?? "";
+$new_status = $_POST["status"] ?? "";
+
+if ($request_number === "" || $new_status === "") {
+    die("بيانات الطلب غير مكتملة.");
+}
+
+/*
+ * تحديد التاريخ المناسب حسب الحالة
+ */
+$today = date("Y-m-d");
+
+if ($new_status === "تم الإشعار") {
+
+    $sql = "
+        UPDATE requests
+        SET
+            status = ?,
+            notification_date = ?
+        WHERE request_number = ?
+    ";
+
+} elseif ($new_status === "تم التسكين") {
+
+    $sql = "
+        UPDATE requests
+        SET
+            status = ?,
+            housing_date = ?
+        WHERE request_number = ?
+    ";
+
+} elseif ($new_status === "تم الإخلاء") {
+
+    $sql = "
+        UPDATE requests
+        SET
+            status = ?,
+            evacuation_date = ?
+        WHERE request_number = ?
+    ";
+
+} else {
+
+    $sql = "
+        UPDATE requests
+        SET status = ?
+        WHERE request_number = ?
+    ";
+
+}
+
+
+/*
+ * تنفيذ التحديث
+ */
+
+$stmt = $conn->prepare($sql);
+
+if (!$stmt) {
+    die("حدث خطأ في تجهيز التحديث: " . $conn->error);
+}
+
+
+if (
+    $new_status === "تم الإشعار" ||
+    $new_status === "تم التسكين" ||
+    $new_status === "تم الإخلاء"
+) {
+
+    $stmt->bind_param(
+        "ssi",
+        $new_status,
+        $today,
+        $request_number
+    );
+
+} else {
+
+    $stmt->bind_param(
+        "si",
+        $new_status,
+        $request_number
+    );
+
+}
+
+
+if ($stmt->execute()) {
+
+    $stmt->close();
+
+    echo "
+    <script>
+        alert('تم تحديث حالة الطلب بنجاح.');
+        window.location.href = 'view-request.php?id=$request_number';
+    </script>
+    ";
+
+    exit;
+
+} else {
+
+    echo "حدث خطأ أثناء تحديث الطلب: " . $stmt->error;
+
+    $stmt->close();
+}
+
+?>

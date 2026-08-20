@@ -1,0 +1,142 @@
+<?php
+
+require_once "db.php";
+
+// التأكد أن الطلب جاء من النموذج
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+    header("Location: add-request.html");
+    exit;
+}
+
+
+// استقبال البيانات
+$full_name = trim($_POST["full_name"] ?? "");
+$employee_number = trim($_POST["employee_number"] ?? "");
+$category = trim($_POST["category"] ?? "");
+$rank = trim($_POST["rank"] ?? "");
+$unit = trim($_POST["unit"] ?? "");
+$location = trim($_POST["location"] ?? "");
+$status = trim($_POST["status"] ?? "جديد");
+$notes = trim($_POST["notes"] ?? "");
+
+
+// التحقق من الحقول المطلوبة
+if (
+    $full_name === "" ||
+    $employee_number === "" ||
+    $category === "" ||
+    $rank === "" ||
+    $unit === "" ||
+    $location === ""
+) {
+    die("يرجى تعبئة جميع الحقول المطلوبة.");
+}
+
+
+// التأكد أن الرقم الوظيفي غير مسجل مسبقًا
+$check = $conn->prepare(
+    "SELECT id FROM requests WHERE employee_number = ? LIMIT 1"
+);
+
+$check->bind_param("s", $employee_number);
+$check->execute();
+$check->store_result();
+
+if ($check->num_rows > 0) {
+
+    $check->close();
+
+    echo "
+    <script>
+        alert('الرقم الوظيفي مسجل مسبقاً!');
+        window.location.href = 'add-request.html';
+    </script>
+    ";
+
+    exit;
+}
+
+$check->close();
+
+
+// إنشاء رقم طلب جديد
+$result = $conn->query(
+    "SELECT MAX(request_number) AS max_number FROM requests"
+);
+
+$row = $result->fetch_assoc();
+
+if ($row["max_number"] !== null) {
+    $request_number = (int)$row["max_number"] + 1;
+} else {
+    $request_number = 1001;
+}
+
+
+// تاريخ الطلب
+$request_date = date("Y-m-d");
+
+
+// حفظ الطلب
+$sql = "
+    INSERT INTO requests
+    (
+        request_number,
+        full_name,
+        employee_number,
+        category,
+        rank,
+        unit,
+        location,
+        status,
+        request_date,
+        notes
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+";
+
+
+$stmt = $conn->prepare($sql);
+
+if (!$stmt) {
+    die("حدث خطأ في تجهيز عملية الحفظ: " . $conn->error);
+}
+
+
+$stmt->bind_param(
+    "isssssssss",
+    $request_number,
+    $full_name,
+    $employee_number,
+    $category,
+    $rank,
+    $unit,
+    $location,
+    $status,
+    $request_date,
+    $notes
+);
+
+
+// تنفيذ الحفظ
+if ($stmt->execute()) {
+
+    $stmt->close();
+
+    echo "
+    <script>
+        alert('تم حفظ الطلب بنجاح! رقم الطلب: $request_number');
+        window.location.href = 'requests.php';
+    </script>
+    ";
+
+    exit;
+
+} else {
+
+    echo "حدث خطأ أثناء حفظ الطلب: " . $stmt->error;
+
+    $stmt->close();
+}
+
+?>

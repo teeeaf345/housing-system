@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إضافة طلب جديد - نظام إدارة الإسكان</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-body">
+
+    <!-- القائمة الجانبية -->
+    <aside class="sidebar">
+        <div>
+            <div class="sidebar-header">
+                <img src="images/logo.png" class="sidebar-logo" alt="الشعار">
+                <h2>إدارة الإسكان</h2>
+                <p>إدارة تشغيل وصيانة المنشآت العسكرية بالطائف</p>
+            </div>
+            <nav class="sidebar-menu">
+                <a href="admin-dashboard.php" class="menu-item"><span>📊</span> لوحة التحكم</a>
+                <a href="requests.php" class="menu-item"><span>📋</span> الطلبات</a>
+                <a href="add-request.html" class="menu-item active"><span>➕</span> طلب جديد</a>
+                <a href="reports.php" class="menu-item"><span>📈</span> التقارير</a>
+                <a href="archive.php" class="menu-item"><span>📁</span> الأرشيف</a>
+            </nav>
+        </div>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="avatar">👤</div>
+                <div>
+                    <strong>مستخدم النظام</strong>
+                    <small>موظف الإسكان</small>
+                </div>
+            </div>
+            <a href="index.php" class="logout-btn">🚪 تسجيل الخروج</a>
+        </div>
+    </aside>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="main-content">
+        <header class="top-header">
+            <div>
+                <h1>إضافة طلب جديد</h1>
+                <p>تعبئة بيانات المستفيد لتقديم طلب إمكان جديد</p>
+            </div>
+            <a href="requests.php" class="back-btn">← العودة للطلبات</a>
+        </header>
+
+        <section class="request-details-card">
+            <form id="addRequestForm" action="save-request.php" method="POST">
+                <div class="details-grid">
+                    <!-- الاسم -->
+                    <div class="filter-group">
+                        <label for="fullName">الاسم الكامل <span style="color:red">*</span></label>
+                      <input type="text" id="fullName" name="full_name" placeholder="أدخل اسم المستفيد الثلاثي أو الرباعي" required>
+                    </div>
+
+                    <!-- الرقم الوظيفي -->
+                    <div class="filter-group">
+                        <label for="empNumber">الرقم الوظيفي <span style="color:red">*</span></label>
+                        <input type="text" id="empNumber" name="employee_number" placeholder="مثال: 1007" required>
+                        <small id="empNumError" style="color:red; display:none;">الرقم الوظيفي مسجل مسبقاً!</small>
+                    </div>
+
+                    <!-- الفئة -->
+                    <div class="filter-group">
+                        <label for="categorySelect">الفئة <span style="color:red">*</span></label>
+                        <select id="categorySelect" name="category" required onchange="onCategoryChange()">
+                            <option value="">اختر الفئة...</option>
+                            <option value="ضباط 1">ضباط 1 (كبار الضباط)</option>
+                            <option value="ضباط 2">ضباط 2</option>
+                            <option value="أفراد">أفراد</option>
+                        </select>
+                    </div>
+
+                    <!-- الرتبة (تتغير حسب الفئة) -->
+                    <div class="filter-group">
+                        <label for="rankSelect">الرتبة <span style="color:red">*</span></label>
+                        <select id="rankSelect" name="rank" required disabled>
+                            <option value="">اختر الفئة أولاً...</option>
+                        </select>
+                    </div>
+
+                    <!-- الوحدة -->
+                    <div class="filter-group">
+                        <label for="unitInput">الوحدة / الإدارة <span style="color:red">*</span></label>
+                       <input type="text" id="unitInput" name="unit" placeholder="مثال: وحدة الصيانة" required>
+                    </div>
+
+                    <!-- الموقع (يتغير حسب الفئة) -->
+                    <div class="filter-group">
+                        <label for="locationSelect">الموقع المتاح <span style="color:red">*</span></label>
+                        <select id="locationSelect" name="location" required disabled>
+                            <option value="">اختر الفئة أولاً...</option>
+                        </select>
+                    </div>
+
+                    <!-- الحالة تلقائية -->
+                    <div class="filter-group">
+                        <label>حالة الطلب الأولية</label>
+                       <input type="text" name="status" value="جديد" readonly style="background:#e7f1ff; color:#0d6efd; font-weight:bold;">
+                    </div>
+                </div>
+
+                <div class="notes-section">
+                    <label for="notesInput" style="font-weight:bold; margin-bottom:8px; display:block;">ملاحظات إضافية</label>
+                    <textarea id="notesInput" name="notes"
+          rows="3"
+          style="width:100%; border:1px solid #d8d8d8; border-radius:10px; padding:10px; font-family:Cairo;"
+          placeholder="أي ملاحظات إضافية تخص الطلب..."></textarea>
+                </div>
+
+                <div style="margin-top: 20px; text-align: left;">
+                    <button type="submit" class="requests-add-btn" style="border:none; cursor:pointer;">💾 حفظ الطلب</button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

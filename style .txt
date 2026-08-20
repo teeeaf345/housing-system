@@ -1,0 +1,1191 @@
+/* ===========================================
+   تنسيق صفحة تسجيل الدخول
+   طيف
+=========================================== */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Cairo,sans-serif;
+}
+
+body{
+
+    background:#ffffff;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    height:100vh;
+
+}
+
+.login-box{
+
+    width:430px;
+
+    background:white;
+
+    padding:40px;
+
+    border-radius:18px;
+
+    text-align:center;
+
+    box-shadow:0 10px 35px rgba(0,0,0,.12);
+
+}
+
+.logo{
+
+    width:90px;
+
+    margin-bottom:20px;
+
+}
+
+h1{
+
+    color:#143642;
+
+    margin-bottom:10px;
+
+    font-size:36px;
+
+}
+
+p{
+
+    color:#777;
+
+    margin-bottom:30px;
+
+}
+
+label{
+
+    display:block;
+
+    text-align:right;
+
+    margin-top:15px;
+
+    margin-bottom:8px;
+
+    font-weight:bold;
+
+    color:#444;
+
+}
+
+input{
+
+    width:100%;
+
+    padding:14px;
+
+    border:1px solid #d8d8d8;
+
+    border-radius:10px;
+
+    font-size:15px;
+
+    margin-bottom:10px;
+
+}
+
+input:focus{
+
+    outline:none;
+
+    border:1px solid #128C7E;
+
+}
+
+button{
+
+    width:100%;
+
+    padding:15px;
+
+    margin-top:20px;
+
+    border:none;
+
+    border-radius:10px;
+
+    background:#128C7E;
+
+    color:white;
+
+    font-size:18px;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+}
+
+button:hover{
+
+    background:#0D6E63;
+
+}
+/* ===========================================
+   تنسيق لوحة التحكم (Dashboard)
+=========================================== */
+
+body.dashboard-body {
+    background-color: #f4f7f6;
+    height: 100vh;
+    display: flex;
+    overflow-x: hidden;
+}
+
+/* القائمة الجانبية Sidebar */
+.sidebar {
+    width: 280px;
+    background: #ffffff;
+    border-left: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 25px 20px;
+    height: 100vh;
+    position: fixed;
+    right: 0;
+    top: 0;
+}
+
+.sidebar-header {
+    text-align: center;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 20px;
+}
+
+.sidebar-logo {
+    width: 65px;
+    margin-bottom: 10px;
+}
+
+.sidebar-header h2 {
+    font-size: 20px;
+    color: #143642;
+}
+
+.sidebar-header p {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 0;
+}
+
+.sidebar-menu {
+    margin-top: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-grow: 1;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: #555;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 10px;
+    transition: 0.3s;
+}
+
+.menu-item:hover, .menu-item.active {
+    background: #e8f5f3;
+    color: #128C7E;
+}
+
+.sidebar-footer {
+    border-top: 1px solid #f0f0f0;
+    padding-top: 15px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.avatar {
+    width: 38px;
+    height: 38px;
+    background: #e2e8f0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-info small {
+    display: block;
+    color: #888;
+    font-size: 12px;
+}
+
+.logout-btn {
+    display: block;
+    text-align: center;
+    color: #dc3545;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* المنطقة الرئيسية Main Content */
+.main-content {
+    margin-right: 280px;
+    flex-grow: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+.top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.top-header h1 {
+    font-size: 28px;
+    color: #143642;
+    margin-bottom: 5px;
+}
+
+.welcome-badge {
+    background: #d1e7dd;
+    color: #0f5132;
+    padding: 10px 18px;
+    border-radius: 30px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* شريط تنبيه 6 أشهر */
+.alert-banner.warning {
+    background-color: #fff3cd;
+    border-right: 5px solid #ffc107;
+    padding: 15px 20px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 25px;
+    color: #664d03;
+}
+
+/* كروت الإحصائيات الرئيسية */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: #ffffff;
+    padding: 18px;
+    border-radius: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    border-top: 4px solid #ccc;
+}
+
+.stat-num {
+    display: block;
+    font-size: 26px;
+    font-weight: bold;
+    color: #143642;
+}
+
+.stat-label {
+    font-size: 13px;
+    color: #666;
+    font-weight: bold;
+}
+
+.stat-icon {
+    font-size: 22px;
+    padding: 8px;
+    border-radius: 10px;
+}
+
+/* ألوان حدود حالات المشروع الخاصة بك */
+.border-blue { border-top-color: #0d6efd; }    /* 🔵 جديد */
+.border-yellow { border-top-color: #ffc107; }  /* 🟡 تم الإشعار */
+.border-green { border-top-color: #2ee858; }   /* 🟢 تم التسكين */
+.border-dark { border-top-color: #212529; }    /* ⚫ تم الإخلاء */
+.border-red { border-top-color: #dc3545; }     /* 🔴 لم يراجع */
+.border-gray { border-top-color: #6c757d; }    /* 🔘 رفض السكن */
+
+.icon-blue { background: #e7f1ff; }
+.icon-yellow { background: #fff9e6; }
+.icon-green { background: #e6f9ed; }
+.icon-dark { background: #e9ecef; }
+.icon-red { background: #ffebee; }
+.icon-gray { background: #f8f9fa; }
+
+/* التفاصيل السفلى */
+.dashboard-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.detail-card {
+    background: #ffffff;
+    padding: 22px;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+}
+
+.detail-card h3 {
+    font-size: 17px;
+    color: #143642;
+    margin-bottom: 18px;
+}
+
+.quick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.action-btn {
+    padding: 12px;
+    text-align: center;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 14px;
+    transition: 0.3s;
+}
+
+.btn-green { background: #128C7E; color: white; }
+.btn-green:hover { background: #0D6E63; }
+
+.btn-yellow { background: #ffc107; color: #000; }
+.btn-yellow:hover { background: #e0a800; }
+
+.btn-outline { border: 1px solid #ccc; color: #444; }
+.btn-outline:hover { background: #f8f9fa; }
+
+.list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+    color: #444;
+}
+
+.list-item:last-child {
+    border-bottom: none;
+}
+
+.badge {
+    background: #f0f4f8;
+    color: #143642;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+}
+/* ===========================================
+نهاية حد شغل طيف
+   
+=========================================== */
+/* =========================================== 
+بدايه شغل رنيم 
+تنسيق صفحه الطلبات
+=========================================== */
+
+.requests-add-btn {
+    display: inline-block;
+    background: #128C7E;
+    color: white;
+    text-decoration: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.requests-add-btn:hover {
+    background: #0D6E63;
+}
+
+
+/* منطقة البحث والفلاتر */
+
+.requests-filters {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 15px;
+
+    margin-bottom: 20px;
+}
+
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+
+.filter-group label {
+    font-size: 13px;
+    font-weight: bold;
+    color: #444;
+}
+
+
+.filter-group input,
+.filter-group select {
+
+    width: 100%;
+
+    padding: 11px 12px;
+
+    border: 1px solid #d8d8d8;
+
+    border-radius: 9px;
+
+    font-family: Cairo, sans-serif;
+
+    font-size: 13px;
+
+    background: white;
+}
+
+
+.filter-group input:focus,
+.filter-group select:focus {
+
+    outline: none;
+
+    border-color: #128C7E;
+
+    box-shadow: 0 0 0 2px rgba(18,140,126,0.08);
+
+}
+
+
+/* زر إعادة الفلاتر */
+
+.reset-filter-btn {
+
+    align-self: end;
+
+    padding: 11px 15px;
+
+    border: 1px solid #ddd;
+
+    background: #f8f9fa;
+
+    color: #555;
+
+    border-radius: 9px;
+
+    cursor: pointer;
+
+    font-family: Cairo, sans-serif;
+
+    font-weight: bold;
+}
+
+
+.reset-filter-btn:hover {
+
+    background: #eeeeee;
+
+}
+
+
+/* معلومات النتائج */
+
+.requests-info {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 12px;
+
+    color: #444;
+
+}
+
+
+.requests-info span {
+
+    color: #777;
+
+    font-size: 13px;
+
+}
+
+
+/* كرت الجدول */
+
+.requests-table-card {
+
+    background: #ffffff;
+
+    border-radius: 16px;
+
+    box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+
+    overflow: hidden;
+
+}
+
+
+/* يسمح بالتمرير إذا الجدول كبير */
+
+.table-wrapper {
+
+    width: 100%;
+
+    overflow-x: auto;
+
+}
+
+
+/* الجدول */
+
+.requests-table {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+    min-width: 1100px;
+
+}
+
+
+.requests-table thead {
+
+    background: #f4f7f6;
+
+}
+
+
+.requests-table th {
+
+    padding: 15px 12px;
+
+    text-align: right;
+
+    font-size: 13px;
+
+    color: #444;
+
+    white-space: nowrap;
+
+    border-bottom: 1px solid #e5e5e5;
+
+}
+
+
+.requests-table td {
+
+    padding: 14px 12px;
+
+    text-align: right;
+
+    font-size: 13px;
+
+    color: #555;
+
+    border-bottom: 1px solid #f0f0f0;
+
+    white-space: nowrap;
+
+}
+
+
+.requests-table tbody tr {
+
+    transition: 0.2s;
+
+}
+
+
+.requests-table tbody tr:hover {
+
+    background: #f8fbfa;
+
+}
+
+
+/* حالات الطلب */
+
+.status-badge {
+
+    display: inline-block;
+
+    padding: 5px 11px;
+
+    border-radius: 20px;
+
+    font-size: 12px;
+
+    font-weight: bold;
+
+    white-space: nowrap;
+
+}
+
+
+.status-new {
+
+    background: #e7f1ff;
+
+    color: #0d6efd;
+
+}
+
+
+.status-notified {
+
+    background: #fff4d6;
+
+    color: #8a6500;
+
+}
+
+
+.status-housed {
+
+    background: #e6f9ed;
+
+    color: #198754;
+
+}
+
+
+.status-evacuated {
+
+    background: #e9ecef;
+
+    color: #343a40;
+
+}
+
+
+.status-not-reviewed {
+
+    background: #ffebee;
+
+    color: #dc3545;
+
+}
+
+
+.status-refused {
+
+    background: #f1f1f1;
+
+    color: #6c757d;
+
+}
+
+
+/* زر عرض الطلب */
+
+.view-btn {
+
+    width: 35px;
+
+    height: 35px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 8px;
+
+    background: #e8f5f3;
+
+    color: #128C7E;
+
+    text-decoration: none;
+
+    transition: 0.3s;
+
+}
+
+
+.view-btn:hover {
+
+    background: #128C7E;
+
+    transform: translateY(-1px);
+
+}
+
+
+/* التجاوب مع الشاشات الصغيرة */
+
+@media (max-width: 1000px) {
+
+    .requests-filters {
+
+        grid-template-columns: repeat(2, 1fr);
+
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .requests-filters {
+
+        grid-template-columns: 1fr;
+
+    }
+
+    .top-header {
+
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 15px;
+
+    }
+
+}
+/* ===========================================
+   صفحة تفاصيل الطلب
+ 
+=========================================== */
+
+
+/* زر العودة */
+
+.back-btn {
+
+    display: inline-block;
+
+    padding: 11px 18px;
+
+    background: #ffffff;
+
+    color: #128C7E;
+
+    border: 1px solid #128C7E;
+
+    border-radius: 10px;
+
+    text-decoration: none;
+
+    font-size: 13px;
+
+    font-weight: bold;
+
+    transition: 0.3s;
+}
+
+
+.back-btn:hover {
+
+    background: #128C7E;
+
+    color: white;
+
+}
+
+
+/* بطاقة تفاصيل الطلب */
+
+.request-details-card {
+
+    background: white;
+
+    border-radius: 16px;
+
+    padding: 25px;
+
+    margin-bottom: 20px;
+
+    box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+
+}
+
+
+/* رأس البطاقة */
+
+.details-header {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding-bottom: 20px;
+
+    margin-bottom: 20px;
+
+    border-bottom: 1px solid #eeeeee;
+}
+
+
+.details-header h2 {
+
+    margin: 0 0 7px;
+
+    font-size: 19px;
+
+    color: #333;
+
+}
+
+
+.details-header p {
+
+    margin: 0;
+
+    font-size: 13px;
+
+    color: #777;
+
+}
+
+
+/* شبكة البيانات */
+
+.details-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(3, 1fr);
+
+    gap: 18px;
+
+}
+
+
+/* كل معلومة */
+
+.detail-item {
+
+    background: #f8faf9;
+
+    border-radius: 10px;
+
+    padding: 15px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 7px;
+
+}
+
+
+.detail-label {
+
+    font-size: 12px;
+
+    color: #777;
+
+}
+
+
+.detail-item strong {
+
+    color: #333;
+
+    font-size: 14px;
+
+}
+
+
+/* الملاحظات */
+
+.notes-section {
+
+    margin-top: 20px;
+
+    padding-top: 20px;
+
+    border-top: 1px solid #eeeeee;
+
+}
+
+
+.notes-section p {
+
+    background: #f8faf9;
+
+    padding: 15px;
+
+    border-radius: 10px;
+
+    color: #555;
+
+    font-size: 13px;
+
+    margin-bottom: 0;
+
+}
+
+
+/* ===========================================
+   Timeline
+=========================================== */
+
+.timeline-card {
+
+    background: white;
+
+    border-radius: 16px;
+
+    padding: 25px;
+
+    box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+
+}
+
+
+.section-title {
+
+    margin-bottom: 25px;
+
+}
+
+
+.section-title h2 {
+
+    margin: 0 0 7px;
+
+    font-size: 19px;
+
+    color: #333;
+
+}
+
+
+.section-title p {
+
+    margin: 0;
+
+    font-size: 13px;
+
+    color: #777;
+
+}
+
+
+/* الخط الزمني */
+
+.timeline {
+
+    position: relative;
+
+    padding-right: 20px;
+
+}
+
+
+/* الخط العمودي */
+
+.timeline::before {
+
+    content: "";
+
+    position: absolute;
+
+    right: 14px;
+
+    top: 10px;
+
+    bottom: 10px;
+
+    width: 2px;
+
+    background: #dfe9e7;
+
+}
+
+
+/* كل مرحلة */
+
+.timeline-item {
+
+    position: relative;
+
+    display: flex;
+
+    gap: 18px;
+
+    padding-bottom: 30px;
+
+}
+
+
+/* آخر مرحلة */
+
+.timeline-item:last-child {
+
+    padding-bottom: 0;
+
+}
+
+
+/* الدائرة */
+
+.timeline-icon {
+
+    width: 30px;
+
+    height: 30px;
+
+    min-width: 30px;
+
+    border-radius: 50%;
+
+    background: #e8eeee;
+
+    color: #777;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 12px;
+
+    font-weight: bold;
+
+    position: relative;
+
+    z-index: 2;
+
+}
+
+
+/* المرحلة المكتملة */
+
+.timeline-item.completed .timeline-icon {
+
+    background: #128C7E;
+
+    color: white;
+
+}
+
+
+/* محتوى المرحلة */
+
+.timeline-content {
+
+    padding-top: 2px;
+
+}
+
+
+.timeline-content h3 {
+
+    margin: 0 0 5px;
+
+    font-size: 15px;
+
+    color: #333;
+
+}
+
+
+.timeline-content span {
+
+    display: block;
+
+    font-size: 12px;
+
+    color: #128C7E;
+
+    margin-bottom: 7px;
+
+}
+
+
+.timeline-content p {
+
+    margin: 0;
+
+    color: #777;
+
+    font-size: 13px;
+
+}
+
+
+/* Responsive */
+
+@media (max-width: 900px) {
+
+    .details-grid {
+
+        grid-template-columns: repeat(2, 1fr);
+
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .details-grid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+
+    .details-header {
+
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 15px;
+
+    }
+
+}
+/*نهايه شغل رنيم*/

@@ -1,0 +1,486 @@
+<?php
+
+require_once "db.php";
+
+$request_number = $_GET["id"] ?? $_POST["request_number"] ?? "";
+
+if ($request_number === "") {
+    die("رقم الطلب غير موجود.");
+}
+
+
+/* =========================
+   حفظ التعديلات
+========================= */
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+
+    $full_name = trim($_POST["full_name"] ?? "");
+    $employee_number = trim($_POST["employee_number"] ?? "");
+    $category = trim($_POST["category"] ?? "");
+    $rank = trim($_POST["rank"] ?? "");
+    $unit = trim($_POST["unit"] ?? "");
+    $location = trim($_POST["location"] ?? "");
+    $notes = trim($_POST["notes"] ?? "");
+
+    if (
+        $full_name === "" ||
+        $employee_number === "" ||
+        $category === "" ||
+        $rank === "" ||
+        $unit === "" ||
+        $location === ""
+    ) {
+        die("يرجى تعبئة جميع الحقول المطلوبة.");
+    }
+
+
+    /* التأكد من عدم تكرار الرقم الوظيفي */
+    $check = $conn->prepare("
+        SELECT request_number
+        FROM requests
+        WHERE employee_number = ?
+        AND request_number != ?
+        LIMIT 1
+    ");
+
+    $check->bind_param(
+        "si",
+        $employee_number,
+        $request_number
+    );
+
+    $check->execute();
+
+    $checkResult = $check->get_result();
+
+    if ($checkResult->num_rows > 0) {
+
+        $check->close();
+
+        die("الرقم الوظيفي مستخدم في طلب آخر.");
+
+    }
+
+    $check->close();
+
+
+    /* تحديث الطلب */
+
+    $stmt = $conn->prepare("
+        UPDATE requests
+        SET
+            full_name = ?,
+            employee_number = ?,
+            category = ?,
+            rank = ?,
+            unit = ?,
+            location = ?,
+            notes = ?
+        WHERE request_number = ?
+    ");
+
+    if (!$stmt) {
+        die("حدث خطأ في تجهيز التعديل: " . $conn->error);
+    }
+
+    $stmt->bind_param(
+        "sssssssi",
+        $full_name,
+        $employee_number,
+        $category,
+        $rank,
+        $unit,
+        $location,
+        $notes,
+        $request_number
+    );
+
+    if ($stmt->execute()) {
+
+        $stmt->close();
+
+        echo "
+        <script>
+            alert('تم تعديل بيانات الطلب بنجاح.');
+            window.location.href = 'view-request.php?id=$request_number';
+        </script>
+        ";
+
+        exit;
+
+    } else {
+
+        die("حدث خطأ أثناء تعديل الطلب: " . $stmt->error);
+
+    }
+}
+
+
+/* =========================
+   جلب بيانات الطلب
+========================= */
+
+$stmt = $conn->prepare("
+    SELECT
+        request_number,
+        full_name,
+        employee_number,
+        category,
+        rank,
+        unit,
+        location,
+        notes
+    FROM requests
+    WHERE request_number = ?
+    LIMIT 1
+");
+
+$stmt->bind_param("i", $request_number);
+$stmt->execute();
+
+$result = $stmt->get_result();
+
+if ($result->num_rows === 0) {
+    die("الطلب غير موجود.");
+}
+
+$request = $result->fetch_assoc();
+
+$stmt->close();
+
+?>
+
+<!DOCTYPE html>
+
+<html lang="ar" dir="rtl">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        تعديل الطلب - نظام إدارة الإسكان
+    </title>
+
+    <link rel="stylesheet"
+          href="style.css">
+
+</head>
+
+<body class="dashboard-body">
+
+
+<aside class="sidebar">
+
+    <div>
+
+        <div class="sidebar-header">
+
+            <img src="images/logo.png"
+                 class="sidebar-logo"
+                 alt="الشعار">
+
+            <h2>
+                إدارة الإسكان
+            </h2>
+
+            <p>
+                إدارة تشغيل وصيانة المنشآت العسكرية بالطائف
+            </p>
+
+        </div>
+
+
+        <nav class="sidebar-menu">
+
+            <a href="admin-dashboard.php"
+               class="menu-item">
+
+                <span>📊</span>
+                لوحة التحكم
+
+            </a>
+
+
+            <a href="requests.php"
+               class="menu-item active">
+
+                <span>📋</span>
+                الطلبات
+
+            </a>
+
+
+            <a href="add-request.html"
+               class="menu-item">
+
+                <span>➕</span>
+                طلب جديد
+
+            </a>
+
+
+            <a href="reports.php"
+               class="menu-item">
+
+                <span>📈</span>
+                التقارير
+
+            </a>
+
+
+            <a href="archive.php"
+               class="menu-item">
+
+                <span>📁</span>
+                الأرشيف
+
+            </a>
+
+        </nav>
+
+    </div>
+
+
+    <div class="sidebar-footer">
+
+        <div class="user-info">
+
+            <div class="avatar">
+                👤
+            </div>
+
+            <div>
+
+                <strong>
+                    مستخدم النظام
+                </strong>
+
+                <small>
+                    موظف الإسكان
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <a href="index.php"
+           class="logout-btn">
+
+            🚪 تسجيل الخروج
+
+        </a>
+
+    </div>
+
+</aside>
+
+
+<main class="main-content">
+
+
+    <header class="top-header">
+
+        <div>
+
+            <h1>
+                تعديل الطلب
+            </h1>
+
+            <p>
+                تعديل بيانات طلب الإسكان
+            </p>
+
+        </div>
+
+
+        <a href="view-request.php?id=<?= urlencode($request["request_number"]) ?>"
+           class="back-btn">
+
+            ← العودة للتفاصيل
+
+        </a>
+
+    </header>
+
+
+    <section class="request-details-card">
+
+
+        <form action="edit-request.php"
+              method="POST">
+
+
+            <input
+                type="hidden"
+                name="request_number"
+                value="<?= htmlspecialchars($request["request_number"]) ?>"
+            >
+
+
+            <div class="details-grid">
+
+
+                <div class="filter-group">
+
+                    <label>
+                        الاسم الكامل
+                    </label>
+
+                    <input
+                        type="text"
+                        name="full_name"
+                        value="<?= htmlspecialchars($request["full_name"]) ?>"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="filter-group">
+
+                    <label>
+                        الرقم الوظيفي
+                    </label>
+
+                    <input
+                        type="text"
+                        name="employee_number"
+                        value="<?= htmlspecialchars($request["employee_number"]) ?>"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="filter-group">
+
+                    <label>
+                        الفئة
+                    </label>
+
+                    <select name="category"
+                            required>
+
+                        <option value="ضباط 1"
+                            <?= $request["category"] === "ضباط 1" ? "selected" : "" ?>>
+                            ضباط 1
+                        </option>
+
+                        <option value="ضباط 2"
+                            <?= $request["category"] === "ضباط 2" ? "selected" : "" ?>>
+                            ضباط 2
+                        </option>
+
+                        <option value="أفراد"
+                            <?= $request["category"] === "أفراد" ? "selected" : "" ?>>
+                            أفراد
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="filter-group">
+
+                    <label>
+                        الرتبة
+                    </label>
+
+                    <input
+                        type="text"
+                        name="rank"
+                        value="<?= htmlspecialchars($request["rank"]) ?>"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="filter-group">
+
+                    <label>
+                        الوحدة / الإدارة
+                    </label>
+
+                    <input
+                        type="text"
+                        name="unit"
+                        value="<?= htmlspecialchars($request["unit"]) ?>"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="filter-group">
+
+                    <label>
+                        الموقع
+                    </label>
+
+                    <select name="location"
+                            required>
+
+                        <option value="الطائف"
+                            <?= $request["location"] === "الطائف" ? "selected" : "" ?>>
+                            الطائف
+                        </option>
+
+                        <option value="الجبالات"
+                            <?= $request["location"] === "الجبالات" ? "selected" : "" ?>>
+                            الجبالات
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <div class="notes-section">
+
+                <label>
+                    الملاحظات
+                </label>
+
+                <textarea
+                    name="notes"
+                    rows="4"
+                    style="width:100%;"
+                ><?= htmlspecialchars($request["notes"] ?? "") ?></textarea>
+
+            </div>
+
+
+            <div style="margin-top:20px; text-align:left;">
+
+                <button
+                    type="submit"
+                    class="requests-add-btn"
+                    style="border:none; cursor:pointer;"
+                >
+                    💾 حفظ التعديلات
+                </button>
+
+            </div>
+
+
+        </form>
+
+
+    </section>
+
+
+</main>
+
+</body>
+
+</html>

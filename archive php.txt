@@ -1,0 +1,474 @@
+<?php
+
+require_once "db.php";
+
+/*
+    جلب الطلبات المؤرشفة من قاعدة البيانات
+
+    الأرشيف هنا يشمل:
+    - تم الإخلاء
+    - رفض السكن
+*/
+
+$sql = "
+    SELECT
+        request_number,
+        full_name,
+        employee_number,
+        category,
+        rank,
+        unit,
+        location,
+        status,
+        request_date,
+        evacuation_date
+    FROM requests
+    WHERE status IN ('تم الإخلاء', 'رفض السكن')
+    ORDER BY request_date DESC
+";
+
+$result = $conn->query($sql);
+
+if (!$result) {
+    die("حدث خطأ أثناء جلب بيانات الأرشيف: " . $conn->error);
+}
+
+
+/* تنسيق التاريخ */
+
+function formatDate($date)
+{
+    if (!$date) {
+        return "غير مسجل";
+    }
+
+    return date("Y/m/d", strtotime($date));
+}
+
+
+/* تحديد كلاس الحالة */
+
+function getStatusClass($status)
+{
+    switch ($status) {
+
+        case "تم الإخلاء":
+            return "status-evacuated";
+
+        case "رفض السكن":
+            return "status-refused";
+
+        default:
+            return "status-new";
+    }
+}
+
+?>
+
+<!DOCTYPE html>
+
+<html lang="ar" dir="rtl">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        الأرشيف - نظام إدارة الإسكان
+    </title>
+
+    <link rel="stylesheet"
+          href="style.css">
+
+</head>
+
+
+<body class="dashboard-body">
+
+
+<!-- القائمة الجانبية -->
+
+<aside class="sidebar">
+
+    <div>
+
+        <div class="sidebar-header">
+
+            <img src="images/logo.png"
+                 class="sidebar-logo"
+                 alt="الشعار">
+
+            <h2>
+                إدارة الإسكان
+            </h2>
+
+            <p>
+                إدارة تشغيل وصيانة المنشآت العسكرية بالطائف
+            </p>
+
+        </div>
+
+
+        <nav class="sidebar-menu">
+
+            <a href="admin-dashboard.php"
+               class="menu-item">
+
+                <span>📊</span>
+                لوحة التحكم
+
+            </a>
+
+
+            <a href="requests.php"
+               class="menu-item">
+
+                <span>📋</span>
+                الطلبات
+
+            </a>
+
+
+            <a href="add-request.html"
+               class="menu-item">
+
+                <span>➕</span>
+                طلب جديد
+
+            </a>
+
+
+            <a href="reports.php"
+               class="menu-item">
+
+                <span>📈</span>
+                التقارير
+
+            </a>
+
+
+            <a href="archive.php"
+               class="menu-item active">
+
+                <span>📁</span>
+                الأرشيف
+
+            </a>
+
+        </nav>
+
+    </div>
+
+
+    <!-- معلومات المستخدم -->
+
+    <div class="sidebar-footer">
+
+        <div class="user-info">
+
+            <div class="avatar">
+                👤
+            </div>
+
+            <div>
+
+                <strong>
+                    مستخدم النظام
+                </strong>
+
+                <small>
+                    موظف الإسكان
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <a href="index.php"
+           class="logout-btn">
+
+            🚪 تسجيل الخروج
+
+        </a>
+
+    </div>
+
+</aside>
+
+
+
+<!-- المحتوى الرئيسي -->
+
+<main class="main-content">
+
+
+    <!-- رأس الصفحة -->
+
+    <header class="top-header">
+
+        <div>
+
+            <h1>
+                أرشيف الطلبات
+            </h1>
+
+            <p>
+                الطلبات التي تم إغلاقها أو رفضها
+            </p>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- معلومات الأرشيف -->
+
+    <section class="requests-info">
+
+        <strong>
+            الطلبات المؤرشفة
+        </strong>
+
+        <span>
+            <?= $result->num_rows ?> طلب
+        </span>
+
+    </section>
+
+
+
+    <!-- جدول الأرشيف -->
+
+    <section class="requests-table-card">
+
+        <div class="table-wrapper">
+
+            <table class="requests-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            رقم الطلب
+                        </th>
+
+                        <th>
+                            الاسم
+                        </th>
+
+                        <th>
+                            الرقم الوظيفي
+                        </th>
+
+                        <th>
+                            الرتبة
+                        </th>
+
+                        <th>
+                            الفئة
+                        </th>
+
+                        <th>
+                            الوحدة
+                        </th>
+
+                        <th>
+                            الموقع
+                        </th>
+
+                        <th>
+                            الحالة
+                        </th>
+
+                        <th>
+                            تاريخ الطلب
+                        </th>
+
+                        <th>
+                            تاريخ الإخلاء
+                        </th>
+
+                        <th>
+                            عرض
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+
+                <?php if ($result->num_rows > 0): ?>
+
+
+                    <?php while ($request = $result->fetch_assoc()): ?>
+
+
+                        <tr>
+
+
+                            <td>
+
+                                <?= htmlspecialchars(
+                                    $request["request_number"]
+                                ) ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <?= htmlspecialchars(
+                                    $request["full_name"]
+                                ) ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <?= htmlspecialchars(
+                                    $request["employee_number"]
+                                ) ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <?= htmlspecialchars(
+                                    $request["rank"]
+                                ) ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <?= htmlspecialchars(
+                                    $request["category"]
+                                ) ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <?= htmlspecialchars(
+                                    $request["unit"]
+                                ) ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <?= htmlspecialchars(
+                                    $request["location"]
+                                ) ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <span
+                                    class="status-badge
+                                    <?= getStatusClass(
+                                        $request["status"]
+                                    ) ?>"
+                                >
+
+                                    <?= htmlspecialchars(
+                                        $request["status"]
+                                    ) ?>
+
+                                </span>
+
+                            </td>
+
+
+                            <td>
+
+                                <?= formatDate(
+                                    $request["request_date"]
+                                ) ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <?= formatDate(
+                                    $request["evacuation_date"]
+                                ) ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <a
+                                    href="view-request.php?id=<?= urlencode(
+                                        $request["request_number"]
+                                    ) ?>"
+                                    class="view-btn"
+                                    title="عرض الطلب"
+                                >
+
+                                    👁️
+
+                                </a>
+
+                            </td>
+
+
+                        </tr>
+
+
+                    <?php endwhile; ?>
+
+
+                <?php else: ?>
+
+
+                    <tr>
+
+                        <td
+                            colspan="11"
+                            style="text-align:center; padding:30px;"
+                        >
+
+                            📁 لا توجد طلبات مؤرشفة حاليًا.
+
+                        </td>
+
+                    </tr>
+
+
+                <?php endif; ?>
+
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+</main>
+
+
+</body>
+
+</html>

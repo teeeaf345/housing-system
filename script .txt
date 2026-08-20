@@ -1,0 +1,70 @@
+// قائمة الأرقام الوظيفية المسجلة مسبقاً (محاكاة لقاعدة البيانات)
+const existingEmpNumbers = ["1001", "1002", "1003", "1004", "1005", "1006"];
+
+// تغيير الرتب والمواقع بناءً على الفئة
+function onCategoryChange() {
+    const category = document.getElementById("categorySelect").value;
+    const rankSelect = document.getElementById("rankSelect");
+    const locationSelect = document.getElementById("locationSelect");
+
+    rankSelect.innerHTML = '<option value="">اختر الرتبة...</option>';
+    locationSelect.innerHTML = '<option value="">اختر الموقع...</option>';
+
+    if (!category) {
+        rankSelect.disabled = true;
+        locationSelect.disabled = true;
+        return;
+    }
+
+    rankSelect.disabled = false;
+    locationSelect.disabled = false;
+
+    // تحديد الرتب المتاحة
+    let ranks = [];
+    if (category === "ضباط 1") {
+        ranks = ["عقيد", "عميد", "لواء", "فريق", "فريق أول"];
+    } else if (category === "ضباط 2") {
+        ranks = ["ملازم", "ملازم أول", "نقيب", "رائد", "مقدم"];
+    } else if (category === "أفراد") {
+        ranks = ["جندي", "جندي أول", "عريف", "وكيل رقيب", "رقيب", "رقيب أول", "رئيس رقباء"];
+    }
+
+    ranks.forEach(r => {
+        const opt = document.createElement("option");
+        opt.value = r;
+        opt.textContent = r;
+        rankSelect.appendChild(opt);
+    });
+
+    // تحديد الموقع المناسب لكل فئة
+    let locations = ["الطائف", "الجبالات"];
+    locations.forEach(loc => {
+        const opt = document.createElement("option");
+        opt.value = loc;
+        opt.textContent = loc;
+        locationSelect.appendChild(opt);
+    });
+}
+
+// التحكم بنموذج إضافة الطلب عند الإرسال
+document.addEventListener("DOMContentLoaded", () => {
+    const addForm = document.getElementById("addRequestForm");
+    if (addForm) {
+        const empInput = document.getElementById("empNumber");
+        const errorMsg = document.getElementById("empNumError");
+
+        // التحقق المباشر عند الكتابة لمنع الرقم الوظيفي المكرر
+        empInput.addEventListener("input", () => {
+            if (existingEmpNumbers.includes(empInput.value.trim())) {
+                errorMsg.style.display = "block";
+                empInput.style.borderColor = "red";
+            } else {
+                errorMsg.style.display = "none";
+                empInput.style.borderColor = "#d8d8d8";
+            }
+        });
+
+       
+    }
+});
+//نهاية جزء شذى
